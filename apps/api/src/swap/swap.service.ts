@@ -1,4 +1,8 @@
-import { Currency, SWAP_SERVICE_NAME, SwapServiceClient } from '@bitsacco/common/types';
+import {
+  Currency,
+  SWAP_SERVICE_NAME,
+  SwapServiceClient,
+} from '@bitsacco/common';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 
@@ -6,8 +10,7 @@ import { ClientGrpc } from '@nestjs/microservices';
 export class SwapService implements OnModuleInit {
   private client: SwapServiceClient;
 
-  constructor(@Inject(SWAP_SERVICE_NAME) private readonly grpc: ClientGrpc) {
-  }
+  constructor(@Inject(SWAP_SERVICE_NAME) private readonly grpc: ClientGrpc) {}
 
   onModuleInit() {
     this.client = this.grpc.getService<SwapServiceClient>(SWAP_SERVICE_NAME);

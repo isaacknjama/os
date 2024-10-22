@@ -1,4 +1,4 @@
-import { Currency } from "./proto/swap";
+import { Currency } from './proto/swap';
 
 export interface OnrampQuoteRequest {
   from: Currency.KES;

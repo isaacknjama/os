@@ -5,10 +5,10 @@
 // source: swap.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
-import { Observable } from "rxjs";
+import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
 
-export const protobufPackage = "swap";
+export const protobufPackage = 'swap';
 
 /** Currency: Enum representing supported currencies. */
 export enum Currency {
@@ -26,8 +26,7 @@ export enum SwapStatus {
 }
 
 /** Empty: Represents an empty message. */
-export interface Empty {
-}
+export interface Empty {}
 
 /** QuoteRequest: Represents a request for a currency swap quote. */
 export interface QuoteRequest {
@@ -58,9 +57,7 @@ export interface QuoteResponse {
    * Optional amount to for a quote
    * Only available if amount was specified
    */
-  amount?:
-    | string
-    | undefined;
+  amount?: string | undefined;
   /**
    * Optional fee for the swap
    * Only available if amount was specified
@@ -88,13 +85,9 @@ export interface OnrampSwapRequest {
    * Optional reference to a quote.
    * If not specified, the service will create a new quote for the swap
    */
-  quote?:
-    | Quote
-    | undefined;
+  quote?: Quote | undefined;
   /** If provided, the service will attempt mobile money onramp */
-  phone?:
-    | string
-    | undefined;
+  phone?: string | undefined;
   /** Amount to swap */
   amount: string;
 }
@@ -109,7 +102,13 @@ export interface OnrampSwapResponse {
   status: SwapStatus;
 }
 
-export const SWAP_PACKAGE_NAME = "swap";
+/** FindSwapRequest: Represents a request to find a swap. */
+export interface FindSwapRequest {
+  /** Unique identifier for the swap */
+  id: string;
+}
+
+export const SWAP_PACKAGE_NAME = 'swap';
 
 /** SwapService: Defines the main service for handling swap operations. */
 
@@ -124,7 +123,7 @@ export interface SwapServiceClient {
 
   /** FindOnrampSwap: Finds and returns a single onramp swap. */
 
-  findOnrampSwap(request: Empty): Observable<OnrampSwapResponse>;
+  findOnrampSwap(request: FindSwapRequest): Observable<OnrampSwapResponse>;
 }
 
 /** SwapService: Defines the main service for handling swap operations. */
@@ -132,32 +131,60 @@ export interface SwapServiceClient {
 export interface SwapServiceController {
   /** GetQuote: Retrieves a quote for a currency swap. */
 
-  getQuote(request: QuoteRequest): Promise<QuoteResponse> | Observable<QuoteResponse> | QuoteResponse;
+  getQuote(
+    request: QuoteRequest,
+  ): Promise<QuoteResponse> | Observable<QuoteResponse> | QuoteResponse;
 
   /** CreateOnrampSwap: Initiates an onramp swap transaction. */
 
   createOnrampSwap(
     request: OnrampSwapRequest,
-  ): Promise<OnrampSwapResponse> | Observable<OnrampSwapResponse> | OnrampSwapResponse;
+  ):
+    | Promise<OnrampSwapResponse>
+    | Observable<OnrampSwapResponse>
+    | OnrampSwapResponse;
 
   /** FindOnrampSwap: Finds and returns a single onramp swap. */
 
-  findOnrampSwap(request: Empty): Promise<OnrampSwapResponse> | Observable<OnrampSwapResponse> | OnrampSwapResponse;
+  findOnrampSwap(
+    request: FindSwapRequest,
+  ):
+    | Promise<OnrampSwapResponse>
+    | Observable<OnrampSwapResponse>
+    | OnrampSwapResponse;
 }
 
 export function SwapServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getQuote", "createOnrampSwap", "findOnrampSwap"];
+    const grpcMethods: string[] = [
+      'getQuote',
+      'createOnrampSwap',
+      'findOnrampSwap',
+    ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("SwapService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      );
+      GrpcMethod('SwapService', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      );
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("SwapService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      );
+      GrpcStreamMethod('SwapService', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      );
     }
   };
 }
 
-export const SWAP_SERVICE_NAME = "SwapService";
+export const SWAP_SERVICE_NAME = 'SwapService';

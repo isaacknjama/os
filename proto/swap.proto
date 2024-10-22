@@ -11,7 +11,7 @@ service SwapService {
   rpc CreateOnrampSwap (OnrampSwapRequest) returns (OnrampSwapResponse) {}
 
   // FindOnrampSwap: Finds and returns a single onramp swap.
-  rpc FindOnrampSwap (Empty) returns (OnrampSwapResponse) {}
+  rpc FindOnrampSwap (FindSwapRequest) returns (OnrampSwapResponse) {}
 }
 
 // Empty: Represents an empty message.
@@ -92,6 +92,12 @@ message OnrampSwapResponse {
   string rate = 2;
   // Current status of the swap
   SwapStatus status = 3;
+}
+
+// FindSwapRequest: Represents a request to find a swap.
+message FindSwapRequest {
+  // Unique identifier for the swap
+  string id = 1;
 }
 
 // Currency: Enum representing supported currencies.

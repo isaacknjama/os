@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
 import { SwapService } from './swap.service';
-import { Currency } from '@bitsacco/common/types';
+import { Currency } from '@bitsacco/common';
 
 @Controller('swap')
 export class SwapController {
-  constructor(private readonly swapService: SwapService) { }
+  constructor(private readonly swapService: SwapService) {}
 
   @Get('onramp/quote')
   getOnrampQuote(

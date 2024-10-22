@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
-import { Currency } from '@bitsacco/common/types';
+import { Currency } from '@bitsacco/common';
 
 describe('SwapController', () => {
   let controller: SwapController;
