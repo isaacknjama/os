@@ -11,11 +11,21 @@ bun install
 ## Compile and run the project
 
 ```bash
-# development
-$ bun dev
-
-# production mode
+# development with docker
 $ bun start
+```
+
+## Compile and run individual services
+
+```bash
+# development with docker
+$ bun dev <app>
+
+# for example, to run the swap microservice
+$ bun dev swap
+
+# to run the api gateway service
+$ bun dev api
 ```
 
 ## Run tests

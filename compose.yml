@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+      target: development
+    command: bun dev api
+    env_file:
+      - ./apps/api/.env
+    ports:
+      - '4000:4000'
+    volumes:
+      - .:/usr/src/app
+  swap:
+    build:
+      context: .
+      dockerfile: ./apps/swap/Dockerfile
+      target: development
+    command: bun dev swap
+    env_file:
+      - ./apps/swap/.env
+    ports:
+      - '4040:4040'
+    volumes:
+      - .:/usr/src/app

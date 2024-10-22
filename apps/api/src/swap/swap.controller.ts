@@ -1,13 +1,25 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Query } from '@nestjs/common';
 import { SwapService } from './swap.service';
+import { Currency } from '@bitsacco/common/types';
 
 @Controller('swap')
 export class SwapController {
   constructor(private readonly swapService: SwapService) { }
 
   @Get('onramp/quote')
-  getOnrampQuote() {
-    return this.swapService.getOnrampQuote();
+  getOnrampQuote(
+    @Query('currency') currency: Currency,
+    @Query('amount') amount?: string,
+  ) {
+    if (currency !== Currency.KES) {
+      throw new Error('Invalid currency. Only KES is supported');
+    }
+
+    return this.swapService.getOnrampQuote({
+      from: currency,
+      to: Currency.BTC,
+      amount,
+    });
   }
 
   @Post('onramp')

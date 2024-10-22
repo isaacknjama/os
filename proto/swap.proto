@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package swap;
+
+// SwapService: Defines the main service for handling swap operations.
+service SwapService {
+  // GetQuote: Retrieves a quote for a currency swap.
+  rpc GetQuote (QuoteRequest) returns (QuoteResponse) {}
+
+  // CreateOnrampSwap: Initiates an onramp swap transaction.
+  rpc CreateOnrampSwap (OnrampSwapRequest) returns (OnrampSwapResponse) {}
+
+  // FindOnrampSwap: Finds and returns a single onramp swap.
+  rpc FindOnrampSwap (Empty) returns (OnrampSwapResponse) {}
+}
+
+// Empty: Represents an empty message.
+message Empty {}
+
+// QuoteRequest: Represents a request for a currency swap quote.
+message QuoteRequest {
+  // Currency to swap from
+  Currency from = 1;
+  // Currency to swap to
+  Currency to = 2;
+
+  reserved 3, 4, 5, 6, 7, 8, 9;
+
+  // Optional amount to quote for
+  // If provided, the service will return a quote for the specified amount
+  optional string amount = 10;
+}
+
+// QuoteResponse: Represents the response for a currency swap quote.
+message QuoteResponse {
+  // Unique identifier for the quote
+  string id = 1;
+  // Currency being swapped from
+  Currency from = 2;
+  // Currency being swapped to
+  Currency to = 3;
+  // Exchange rate for the swap
+  string rate = 4;
+  // Expiry time (UNIX) for the quote
+  string expiry = 5;
+
+  reserved 6, 7, 8, 9;
+
+  // Optional amount to for a quote
+  // Only available if amount was specified
+  optional string amount = 10;
+  // Optional fee for the swap
+  // Only available if amount was specified
+  optional string fee = 11;
+
+}
+
+// Quote: Represents a currency swap quote.
+message Quote {
+  // Optional quote ID to reference a quote.
+  // If not specified, the service will create a new quote for the swap
+  string id = 1;
+
+  // If the quote is expired, allow the service can refresh the quote
+  // should it expire before swap
+  bool refresh_if_expired = 2;
+}
+
+// OnrampSwapRequest: Represents a request to create an onramp swap.
+message OnrampSwapRequest {
+  // Optional reference to a quote.
+  // If not specified, the service will create a new quote for the swap
+  optional Quote quote = 1;
+
+  reserved 2, 3, 4, 5, 6, 7, 8, 9;
+
+  // Source of the swap
+  oneof source {
+    // If provided, the service will attempt mobile money onramp
+    string phone = 10;
+  }
+
+  // Amount to swap
+  string amount = 11;
+}
+
+// OnrampSwapResponse: Represents the response for an onramp swap.
+message OnrampSwapResponse {
+  // Unique identifier for the swap
+  string id = 1;
+  // Exchange rate used for the swap
+  string rate = 2;
+  // Current status of the swap
+  SwapStatus status = 3;
+}
+
+// Currency: Enum representing supported currencies.
+enum Currency {
+  BTC = 0;
+  KES = 1;
+}
+
+// SwapStatus: Enum representing the possible statuses of a swap.
+enum SwapStatus {
+  PENDING = 0;
+  COMPLETED = 1;
+  FAILED = 2;
+}

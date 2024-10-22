@@ -9,19 +9,25 @@ async function bootstrap() {
   const app = await NestFactory.create(ApiModule);
 
   app.setGlobalPrefix(API_VERSION);
+  // app.enableVersioning({
+  //   type: VersioningType.URI,
+  //   defaultVersion: API_VERSION,
+  // });
+
   setupOpenAPI(app, 'docs');
 
-  await app.listen(process.env.port ?? 3000);
+  await app.listen(process.env.PORT ?? 4000);
 }
 
 bootstrap();
 
-function setupOpenAPI(app: INestApplication, path: string, jsonPath?: string) {
+function setupOpenAPI(app: INestApplication, path: string) {
   const options = new DocumentBuilder()
     .setTitle('Bitsacco API')
     .setDescription('endpoints for bitsacco api')
-    .setVersion('1.0')
-    .addTag('bitsacco')
+    .setVersion(API_VERSION)
+    .setContact('Bitsacco', 'https://bitsacco.com', 'os@bitsacco.com')
+    .setLicense('MIT', 'https://github.com/bitsacco/opensource/blob/main/LICENSE')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, options);
 

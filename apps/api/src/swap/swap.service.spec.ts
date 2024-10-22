@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SwapService } from './swap.service';
+import { Currency } from '@bitsacco/common/types';
 
 describe('SwapService', () => {
   let service: SwapService;
@@ -18,7 +19,11 @@ describe('SwapService', () => {
 
   describe('getOnrampQuote', () => {
     it('should return status 200', () => {
-      expect(service.getOnrampQuote()).toEqual({ status: 200 });
+      expect(service.getOnrampQuote({
+        from: Currency.KES,
+        to: Currency.BTC,
+        amount: '1',
+      })).toEqual({ status: 200 });
     });
   });
 

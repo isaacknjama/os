@@ -1,9 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Currency, SWAP_SERVICE_NAME, SwapServiceClient } from '@bitsacco/common/types';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
 
 @Injectable()
-export class SwapService {
-  getOnrampQuote() {
-    return { status: 200 };
+export class SwapService implements OnModuleInit {
+  private client: SwapServiceClient;
+
+  constructor(@Inject(SWAP_SERVICE_NAME) private readonly grpc: ClientGrpc) {
+  }
+
+  onModuleInit() {
+    this.client = this.grpc.getService<SwapServiceClient>(SWAP_SERVICE_NAME);
+  }
+
+  getOnrampQuote(req: {
+    from: Currency.KES;
+    to: Currency.BTC;
+    amount?: string;
+  }) {
+    return this.client.getQuote(req);
   }
 
   postOnrampTransaction() {

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
+import { Currency } from '@bitsacco/common/types';
 
 describe('SwapController', () => {
   let controller: SwapController;
@@ -37,8 +38,13 @@ describe('SwapController', () => {
 
   describe('getOnrampQuote', () => {
     it('should call swapService.getOnrampQuote', () => {
-      controller.getOnrampQuote();
+      controller.getOnrampQuote(Currency.KES);
       expect(swapService.getOnrampQuote).toHaveBeenCalled();
+    });
+
+    it('throws if unsupported currency is supplied', () => {
+      controller.getOnrampQuote(Currency.BTC);
+      expect(swapService.getOnrampQuote).toThrow();
     });
   });
 

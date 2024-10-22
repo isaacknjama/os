@@ -4,7 +4,9 @@
   "sourceRoot": "apps/api/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true
+    "webpack": true,
+    "assets": ["**/*.proto"],
+    "watchAssets": true
   },
   "projects": {
     "common": {
@@ -23,6 +25,15 @@
       "sourceRoot": "apps/api/src",
       "compilerOptions": {
         "tsConfigPath": "apps/api/tsconfig.app.json"
+      }
+    },
+    "swap": {
+      "type": "application",
+      "root": "apps/swap",
+      "entryFile": "main",
+      "sourceRoot": "apps/swap/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/swap/tsconfig.app.json"
       }
     }
   },
