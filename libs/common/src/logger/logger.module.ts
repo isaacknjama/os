@@ -11,6 +11,10 @@ import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
             singleLine: true,
           },
         },
+        redact: {
+          paths: ['req.headers', 'res.headers'],
+          remove: true,
+        },
       },
     }),
   ],
