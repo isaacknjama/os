@@ -2,7 +2,7 @@ import { Logger } from 'nestjs-pino';
 import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ApiModule } from './api.module' ;
+import { ApiModule } from './api.module';
 
 const API_VERSION = 'v1';
 

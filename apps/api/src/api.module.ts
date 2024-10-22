@@ -1,13 +1,20 @@
 import { join } from 'path';
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { LoggerModule, SWAP_PACKAGE_NAME, SWAP_SERVICE_NAME } from '@bitsacco/common';
+import {
+  LoggerModule,
+  SWAP_PACKAGE_NAME,
+  SWAP_SERVICE_NAME,
+} from '@bitsacco/common';
 import { SwapController, SwapService } from './swap';
 
 @Module({
   imports: [
     LoggerModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     ClientsModule.registerAsync([
       {
         name: SWAP_SERVICE_NAME,
@@ -26,4 +33,4 @@ import { SwapController, SwapService } from './swap';
   controllers: [SwapController],
   providers: [SwapService],
 })
-export class ApiModule { }
+export class ApiModule {}

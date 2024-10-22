@@ -1,22 +1,47 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { SwapService } from './swap.service';
-import { Currency } from '@bitsacco/common';
+import { Currency, mapToCurrency } from '@bitsacco/common';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { SupportedCurrencies } from '@bitsacco/common/types/api';
 
 @Controller('swap')
 export class SwapController {
-  constructor(private readonly swapService: SwapService) {}
+  private logger = new Logger(SwapController.name);
+
+  constructor(private readonly swapService: SwapService) {
+    this.logger.log('SwapController initialized');
+  }
 
   @Get('onramp/quote')
+  @ApiOperation({ summary: 'Get onramp quote' })
+  @ApiQuery({ name: 'currency', enum: SupportedCurrencies, required: true })
+  @ApiQuery({ name: 'amount', type: String, required: false })
   getOnrampQuote(
-    @Query('currency') currency: Currency,
+    @Query('currency') currency: SupportedCurrencies,
     @Query('amount') amount?: string,
   ) {
-    if (currency !== Currency.KES) {
-      throw new Error('Invalid currency. Only KES is supported');
+    const from = mapToCurrency(currency);
+    if (from !== Currency.KES) {
+      const es = 'Invalid currency. Only KES is supported';
+      this.logger.error(es);
+      throw new BadRequestException(es);
+    }
+
+    if (amount && isNaN(parseFloat(amount))) {
+      const es = 'Invalid amount. Must be a number string';
+      this.logger.error(es);
+      throw new BadRequestException(es);
     }
 
     return this.swapService.getOnrampQuote({
-      from: currency,
+      from,
       to: Currency.BTC,
       amount,
     });
