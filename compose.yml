@@ -5,6 +5,7 @@ services:
       dockerfile: ./apps/api/Dockerfile
       target: development
     command: bun dev api
+    restart: always
     env_file:
       - ./apps/api/.env
     ports:
@@ -17,6 +18,7 @@ services:
       dockerfile: ./apps/swap/Dockerfile
       target: development
     command: bun dev swap
+    restart: always
     env_file:
       - ./apps/swap/.env
     ports:
