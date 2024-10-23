@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MpesaOnrampSwap {
+  /// Unique identifier for the swap
+  id        String   @id @default(uuid())
+  /// References the user who made the transaction. userId is the user's public key.
+  userId    String
+  /// References the account this transaction is associated with.
+  /// Example:
+  ///  - `chama:${chamaId}`
+  ///  - `sacco:${saccoId}`
+  account   String
+  /// Lightning invoice to pay.
+  lightning String
+  /// Incoming Mpesa transaction ID.
+  mpesa     String
+  /// State and progress of the swap
+  state     MpesaOnrampSwapState
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+enum MpesaOnrampSwapState {
+  PENDING
+  PROCESSING
+  FAILED
+  COMPLETE
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@bitsacco/swap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "author": "",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "migrate": "dotenv -e .env.local -- bun prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.21.1",
+    "prisma": "^5.21.1"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^7.4.2"
+  }
+}

@@ -20,8 +20,9 @@ export enum Currency {
 /** SwapStatus: Enum representing the possible statuses of a swap. */
 export enum SwapStatus {
   PENDING = 0,
-  COMPLETED = 1,
+  PROCESSING = 1,
   FAILED = 2,
+  COMPLETE = 3,
   UNRECOGNIZED = -1,
 }
 
