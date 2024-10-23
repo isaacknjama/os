@@ -4,6 +4,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { HttpModule } from '@nestjs/axios';
 import { FxService } from './fx.service';
 
+const mock_rate = 8708520.117232416;
+
 describe('FxService Mocked', () => {
   let mockFxService: FxService;
 
@@ -16,7 +18,7 @@ describe('FxService Mocked', () => {
           provide: FxService,
           useValue: {
             getBtcToKesRate: jest.fn(() => {
-              return 11.4221;
+              return mock_rate;
             }),
           },
         },
@@ -48,7 +50,6 @@ describe('FxService Real', () => {
   let fxService: FxService;
   let mockCfg: { get: jest.Mock };
   let mockCacheManager: any;
-  const mock_rate = 8708520.117232416;
 
   beforeEach(async () => {
     mockCfg = {
@@ -118,7 +119,7 @@ describe('FxService Real', () => {
         case 'NODE_ENV':
           return 'production';
         case 'MOCK_KES_BTC_RATE':
-          return '1000000';
+          return mock_rate;
         default:
           return undefined;
       }
@@ -137,7 +138,7 @@ describe('FxService Real', () => {
         case 'CURRENCY_API_KEY':
           return 'test-api-key';
         case 'MOCK_KES_BTC_RATE':
-          return '1000000';
+          return mock_rate;
         default:
           return undefined;
       }

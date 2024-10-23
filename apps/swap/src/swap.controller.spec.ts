@@ -4,6 +4,8 @@ import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 
+const mock_rate = 8708520.117232416;
+
 describe('SwapController', () => {
   let swapController: SwapController;
 
@@ -16,7 +18,7 @@ describe('SwapController', () => {
         {
           provide: FxService,
           useValue: {
-            getBtcToKesRate: jest.fn().mockResolvedValue(11.483007291),
+            getBtcToKesRate: jest.fn().mockResolvedValue(mock_rate),
           },
         },
       ],
@@ -61,7 +63,7 @@ describe('SwapController', () => {
       expect(quote).toBeDefined();
       expect(quote.amount).toBeDefined();
       expect(quote.amount).toEqual(
-        btcFromKes({ amountKes: Number(amount), btcToKesRate: 11.483007291 }),
+        btcFromKes({ amountKes: Number(amount), btcToKesRate: mock_rate }),
       );
     });
 
