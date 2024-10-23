@@ -7,7 +7,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { SwapService } from './swap.service';
-import { Currency, mapToCurrency } from '@bitsacco/common';
+import {
+  Currency,
+  mapToCurrency,
+  type SupportedCurrencyType,
+} from '@bitsacco/common';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { SupportedCurrencies } from '@bitsacco/common';
 
@@ -15,9 +19,7 @@ import { SupportedCurrencies } from '@bitsacco/common';
 export class SwapController {
   private readonly logger = new Logger(SwapController.name);
 
-  constructor(
-    private readonly swapService: SwapService
-  ) {
+  constructor(private readonly swapService: SwapService) {
     this.logger.log('SwapController initialized');
   }
 
@@ -26,7 +28,7 @@ export class SwapController {
   @ApiQuery({ name: 'currency', enum: SupportedCurrencies, required: true })
   @ApiQuery({ name: 'amount', type: Number, required: false })
   getOnrampQuote(
-    @Query('currency') currency: SupportedCurrencies,
+    @Query('currency') currency: SupportedCurrencyType,
     @Query('amount') amount?: number,
   ) {
     const from = mapToCurrency(currency);

@@ -4,7 +4,7 @@ import {
   SwapServiceClient,
 } from '@bitsacco/common';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ClientGrpc } from '@nestjs/microservices';
+import { type ClientGrpc } from '@nestjs/microservices';
 
 @Injectable()
 export class SwapService implements OnModuleInit {
