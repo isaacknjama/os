@@ -27,3 +27,17 @@ services:
       - '4040:4040'
     volumes:
       - .:/usr/src/app
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=bs
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_datadir:/var/lib/postgresql/data
+    restart: always
+volumes:
+  postgres_datadir:
