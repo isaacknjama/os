@@ -9,23 +9,25 @@ import {
 import { SwapService } from './swap.service';
 import { Currency, mapToCurrency } from '@bitsacco/common';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { SupportedCurrencies } from '@bitsacco/common/types/api';
+import { SupportedCurrencies } from '@bitsacco/common';
 
 @Controller('swap')
 export class SwapController {
-  private logger = new Logger(SwapController.name);
+  private readonly logger = new Logger(SwapController.name);
 
-  constructor(private readonly swapService: SwapService) {
+  constructor(
+    private readonly swapService: SwapService
+  ) {
     this.logger.log('SwapController initialized');
   }
 
   @Get('onramp/quote')
   @ApiOperation({ summary: 'Get onramp quote' })
   @ApiQuery({ name: 'currency', enum: SupportedCurrencies, required: true })
-  @ApiQuery({ name: 'amount', type: String, required: false })
+  @ApiQuery({ name: 'amount', type: Number, required: false })
   getOnrampQuote(
     @Query('currency') currency: SupportedCurrencies,
-    @Query('amount') amount?: string,
+    @Query('amount') amount?: number,
   ) {
     const from = mapToCurrency(currency);
     if (from !== Currency.KES) {
@@ -34,16 +36,10 @@ export class SwapController {
       throw new BadRequestException(es);
     }
 
-    if (amount && isNaN(parseFloat(amount))) {
-      const es = 'Invalid amount. Must be a number string';
-      this.logger.error(es);
-      throw new BadRequestException(es);
-    }
-
     return this.swapService.getOnrampQuote({
       from,
       to: Currency.BTC,
-      amount,
+      amount: amount?.toString(),
     });
   }
 
