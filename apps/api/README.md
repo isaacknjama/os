@@ -4,6 +4,7 @@ This app is a REST gateway api for all bitsacco os microservices
 
 ## Dev
 
+Rename `example.env` to `.env` and update the values with your own credentials.
 Run `bun start` to launch the app and all underlying microservices in development mode. This uses docker compose
 
 ## Docs

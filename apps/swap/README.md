@@ -10,6 +10,7 @@ This app is a gRPC microservice for onramping / offramping between <currency>/BT
 
 ## Dev
 
+Rename `example.env` to `.env` and update the values with your own credentials.
 Run `bun dev swap` to launch the microservices in development mode.
 Run `bun start` to launch this plus any other microservice and the REST api gateway in dev mode 
 
