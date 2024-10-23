@@ -45,10 +45,13 @@ $ bun test:cov
 
 ```
 
+| Read more contribution docs at [contributing.md](https://github.com/bitsacco/opensource/blob/main/docs/contributing.md)
+
 ## Resources
 
 Check out a few resources that may come in handy when working services and components in this project:
 
+- Read the architecture documentation at [architecture.md](https://github.com/bitsacco/opensource/blob/main/docs/architecture.md).
 - For questions and support, please visit our [Discord channel](https://discord.gg/r2ZW377ADS).
 
 ## Support
