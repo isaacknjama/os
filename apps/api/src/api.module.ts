@@ -1,4 +1,5 @@
 import { join } from 'path';
+import * as  Joi from 'joi';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -14,6 +15,11 @@ import { SwapController, SwapService } from './swap';
     LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: Joi.object({
+        PORT: Joi.string().required(),
+        NODE_ENV: Joi.string().required(),
+        SWAP_GRPC_URL: Joi.string().required(),
+      }),
     }),
     ClientsModule.registerAsync([
       {
