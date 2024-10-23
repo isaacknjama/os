@@ -1,16 +1,16 @@
 import { Currency } from './proto/swap';
 
-export type SupportedCurrencies = Extract<Currency, 'KES' | 'BTC'>;
+export type SupportedCurrencyType = Extract<Currency, 'KES' | 'BTC'>;
 
 export const SupportedCurrencies = {
-  KES: 'KES' as const,
-  BTC: 'BTC' as const,
+  KES: 'KES' as SupportedCurrencyType,
+  BTC: 'BTC' as SupportedCurrencyType,
 } as const;
 
 export type SupportedCurrencyKeys = keyof typeof SupportedCurrencies;
 
 export interface OnrampQuoteRequest {
-  from: SupportedCurrencies['KES'];
-  to: SupportedCurrencies['BTC'];
+  from: SupportedCurrencyType;
+  to: SupportedCurrencyType;
   amount?: string;
 }

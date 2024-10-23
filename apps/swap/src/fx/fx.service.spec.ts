@@ -9,17 +9,13 @@ describe('FxService Mocked', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule,
-        HttpModule,
-        CacheModule.register()
-      ],
+      imports: [ConfigModule, HttpModule, CacheModule.register()],
       providers: [
         ConfigService,
         {
           provide: FxService,
           useValue: {
-            getKesToBtcRate: jest.fn(() => {
+            getBtcToKesRate: jest.fn(() => {
               return 11.4221;
             }),
           },
@@ -42,7 +38,7 @@ describe('FxService Mocked', () => {
   });
 
   it('should return a rate', async () => {
-    const rate = await mockFxService.getKesToBtcRate();
+    const rate = await mockFxService.getBtcToKesRate();
 
     expect(rate).toBeDefined();
   });
@@ -52,7 +48,7 @@ describe('FxService Real', () => {
   let fxService: FxService;
   let mockCfg: { get: jest.Mock };
   let mockCacheManager: any;
-  const mock_rate = 11.483007291;
+  const mock_rate = 8708520.117232416;
 
   beforeEach(async () => {
     mockCfg = {
@@ -65,11 +61,7 @@ describe('FxService Real', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule,
-        HttpModule,
-        CacheModule.register()
-      ],
+      imports: [ConfigModule, HttpModule, CacheModule.register()],
       providers: [
         {
           provide: ConfigService,
@@ -102,7 +94,7 @@ describe('FxService Real', () => {
       }
     });
 
-    await expect(await fxService.getKesToBtcRate()).toEqual((1 / mock_rate) * 100000000);
+    await expect(await fxService.getBtcToKesRate()).toEqual(mock_rate);
   });
 
   it('test: should use MOCK_KES_BTC_RATE config', async () => {
@@ -117,7 +109,7 @@ describe('FxService Real', () => {
       }
     });
 
-    await expect(await fxService.getKesToBtcRate()).toEqual((1 / mock_rate) * 100000000);
+    await expect(await fxService.getBtcToKesRate()).toEqual(mock_rate);
   });
 
   it('production: should ignore MOCK_KES_BTC_RATE config', async () => {
@@ -132,7 +124,9 @@ describe('FxService Real', () => {
       }
     });
 
-    await expect(fxService.getKesToBtcRate()).rejects.toThrow('CURRENCY_API_KEY not found');
+    await expect(fxService.getBtcToKesRate()).rejects.toThrow(
+      'CURRENCY_API_KEY not found',
+    );
   });
 
   it('production: should throw a 401 error when CURRENCY_API_KEY config is not valid', async () => {
@@ -149,6 +143,8 @@ describe('FxService Real', () => {
       }
     });
 
-    await expect(fxService.getKesToBtcRate()).rejects.toThrow('Request failed with status code 401');
+    await expect(fxService.getBtcToKesRate()).rejects.toThrow(
+      'Request failed with status code 401',
+    );
   });
 });

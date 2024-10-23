@@ -54,7 +54,7 @@ export interface QuoteResponse {
   /** Expiry time (UNIX) for the quote */
   expiry: string;
   /**
-   * Optional amount to for a quote
+   * Optional amount to be paid in target currency
    * Only available if amount was specified
    */
   amount?: string | undefined;

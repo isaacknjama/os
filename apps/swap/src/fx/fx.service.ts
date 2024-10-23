@@ -27,7 +27,7 @@ export class FxService {
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.logger.log('FxService initialized');
   }
@@ -54,16 +54,19 @@ export class FxService {
 
     const response = await firstValueFrom(
       this.httpService
-        .get(`https://api.currencyapi.com/v3/latest?apikey=${api_key}&base_currency=BTC&currencies=KES`, {
-          headers: {
-            'Content-Type': 'application/json',
+        .get(
+          `https://api.currencyapi.com/v3/latest?apikey=${api_key}&base_currency=BTC&currencies=KES`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
           },
-        })
+        )
         .pipe(
           catchError((error: AxiosError) => {
             throw error;
-          })
-        )
+          }),
+        ),
     );
 
     const { data }: CurrencyApiResponse = response.data;
@@ -76,8 +79,8 @@ export class FxService {
     return result;
   }
 
-  async getKesToBtcRate() {
+  async getBtcToKesRate() {
     const { btcToKesRate } = await this.getCurrencyApiRates();
-    return (1 / btcToKesRate) * 100000000;
+    return btcToKesRate;
   }
 }

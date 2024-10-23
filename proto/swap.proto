@@ -46,13 +46,12 @@ message QuoteResponse {
 
   reserved 6, 7, 8, 9;
 
-  // Optional amount to for a quote
+  // Optional amount to be paid in target currency
   // Only available if amount was specified
   optional string amount = 10;
   // Optional fee for the swap
   // Only available if amount was specified
   optional string fee = 11;
-
 }
 
 // Quote: Represents a currency swap quote.
