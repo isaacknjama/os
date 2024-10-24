@@ -7,7 +7,6 @@
   "license": "MIT",
   "scripts": {
     "start": "docker compose -p os up",
-    "pdb": "bun prisma migrate deploy --schema apps/swap/prisma/schema.prisma && bun prisma generate --schema apps/swap/prisma/schema.prisma",
     "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
     "build": "nest build",
@@ -22,8 +21,7 @@
     "test:e2e": "bun test apps/api/test/ --config ./apps/api/test/jest-e2e.json",
     "proto:gen": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./libs/common/src/types/proto --ts_proto_opt=nestJs=true -I ./proto ./proto/*.proto",
     "proto:clean": "rm ./libs/common/src/types/proto/*.ts",
-    "migrate": "bun ./scripts/migrate.ts",
-    "migrate:deploy": "bun prisma migrate deploy"
+    "migrate": "bun ./scripts/migrate.ts"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.2",
