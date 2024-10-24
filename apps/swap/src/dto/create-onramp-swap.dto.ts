@@ -1,10 +1,4 @@
-import {
-  IsDefined,
-  IsString,
-  IsOptional,
-  IsNotEmpty,
-  Validate,
-} from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, Validate } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
   type Quote,
@@ -16,7 +10,7 @@ export class CreateOnrampSwapDto implements OnrampSwapRequest {
   @IsOptional()
   quote: Quote;
 
-  @IsDefined()
+  @IsNotEmpty()
   @IsString()
   @Type(() => String)
   ref: string;

@@ -14,7 +14,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
 import { IntasendService } from './intasend/intasend.service';
-import { CreateOnrampSwapDto } from './dto';
+import { CreateOnrampSwapDto, FindSwapDto } from './dto';
 
 @Injectable()
 export class SwapService {
@@ -110,7 +110,18 @@ export class SwapService {
     };
   }
 
-  async findOnrampSwap({ id }: FindSwapRequest): Promise<OnrampSwapResponse> {
-    return Promise.reject('Not implemented');
+  async findOnrampSwap({ id }: FindSwapDto): Promise<OnrampSwapResponse> {
+    // TODO: Check for swap in DB, otherwise try return swap from cache
+    const swap = await this.cacheManager.get(id);
+
+    if (!swap) {
+      throw new Error('Swap not found');
+    }
+
+    return {
+      id,
+      rate: swap.rate,
+      status: SwapStatus.PENDING,
+    };
   }
 }

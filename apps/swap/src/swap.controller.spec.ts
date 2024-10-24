@@ -19,7 +19,7 @@ describe('SwapController', () => {
   let prismaService: PrismaService;
   let mockCacheManager: {
     get: jest.Mock;
-    set: jest.Mock
+    set: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -92,6 +92,7 @@ describe('SwapController', () => {
 
       expect(quote.expiry).toBeDefined();
       expect(Number(quote.expiry)).toBeGreaterThanOrEqual(tenMinsFuture);
+      expect(mockCacheManager.set).toHaveBeenCalled();
     });
 
     it('should return a quote with amount, if amount is declared', async () => {
@@ -106,6 +107,7 @@ describe('SwapController', () => {
       expect(quote.amount).toEqual(
         btcFromKes({ amountKes: Number(amount), btcToKesRate: mock_rate }),
       );
+      expect(mockCacheManager.set).toHaveBeenCalled();
     });
 
     it('should throw an error if amount is not a number string', async () => {
@@ -120,7 +122,7 @@ describe('SwapController', () => {
   });
 
   describe('createOnrampSwap', () => {
-    it('should create an onramp swap', async () => {
+    it('should create an onramp swap with expected fx rate', async () => {
       const cache = {
         lightning: 'lnbtcexampleinvoicee',
         phone: '0700000000',
@@ -129,7 +131,9 @@ describe('SwapController', () => {
         ref: 'test-onramp-swap',
       };
 
-      (mockCacheManager.get as jest.Mock).mockImplementation((key: string) => cache);
+      (mockCacheManager.get as jest.Mock).mockImplementation(
+        (key: string) => cache,
+      );
 
       const req: CreateOnrampSwapDto = {
         quote: {
@@ -147,16 +151,41 @@ describe('SwapController', () => {
       expect(swap).toBeDefined();
       expect(swap.rate).toEqual(cache.rate);
       expect(swap.status).toEqual(SwapStatus.PENDING);
+      expect(mockCacheManager.set).toHaveBeenCalled();
     });
   });
 
   describe('findOnrampSwap', () => {
-    it('should find an onramp swap', async () => {
+    it('should return a known swap is in cache', async () => {
+      const cache = {
+        lightning: 'lnbtcexampleinvoicee',
+        phone: '0700000000',
+        amount: '100',
+        rate: mock_rate.toString(),
+        ref: 'test-onramp-swap',
+      };
+
+      (mockCacheManager.get as jest.Mock).mockImplementation(
+        (key: string) => cache,
+      );
+
+      const swap = await swapController.findOnrampSwap({
+        id: 'dadad-bdjada-dadad',
+      });
+
+      expect(swap).toBeDefined();
+      expect(swap.rate).toEqual(cache.rate);
+      expect(swap.status).toEqual(SwapStatus.PENDING);
+    });
+
+    it('should throw an error if swap is unknown', async () => {
       expect(
         swapController.findOnrampSwap({
           id: 'dadad-bdjada-dadad',
         }),
-      ).rejects.toThrow('Not implemented');
+      ).rejects.toThrow('Swap not found');
     });
+
+    // TODO: Verify find swap already persisted to DB
   });
 });
