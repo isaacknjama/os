@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.21.1",
+    "intasend-node": "^1.1.2",
     "prisma": "^5.21.1"
   },
   "devDependencies": {
