@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
+  EVENTS_SERVICE_BUS,
   LoggerModule,
   SWAP_PACKAGE_NAME,
   SWAP_SERVICE_NAME,
@@ -19,6 +20,8 @@ import { SwapController, SwapService } from './swap';
         PORT: Joi.string().required(),
         NODE_ENV: Joi.string().required(),
         SWAP_GRPC_URL: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
       }),
     }),
     ClientsModule.registerAsync([
@@ -34,6 +37,17 @@ import { SwapController, SwapService } from './swap';
         }),
         inject: [ConfigService],
       },
+      {
+        name: EVENTS_SERVICE_BUS,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.REDIS,
+          options: {
+            host: configService.getOrThrow<string>('REDIS_HOST'),
+            port: configService.getOrThrow<number>('REDIS_PORT'),
+          }
+        }),
+        inject: [ConfigService],
+      }
     ]),
   ],
   controllers: [SwapController],

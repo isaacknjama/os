@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Get,
+  Inject,
   Logger,
   Post,
   Query,
@@ -11,15 +12,21 @@ import {
   Currency,
   mapToCurrency,
   type SupportedCurrencyType,
+  SupportedCurrencies,
+  process_swap_update,
+  EVENTS_SERVICE_BUS
 } from '@bitsacco/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { SupportedCurrencies } from '@bitsacco/common';
 
 @Controller('swap')
 export class SwapController {
   private readonly logger = new Logger(SwapController.name);
 
-  constructor(private readonly swapService: SwapService) {
+  constructor(
+    private readonly swapService: SwapService,
+    @Inject(EVENTS_SERVICE_BUS) private readonly eventsClient: ClientProxy
+  ) {
     this.logger.log('SwapController initialized');
   }
 
@@ -82,6 +89,7 @@ export class SwapController {
 
   @Post('update')
   postSwapUpdate() {
-    return this.swapService.postSwapUpdate();
+    this.eventsClient.emit(process_swap_update, {});
+    return { success: true };
   }
 }
