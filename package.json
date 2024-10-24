@@ -37,6 +37,8 @@
     "@nestjs/sequelize": "^10.0.1",
     "@nestjs/swagger": "^7.4.2",
     "cache-manager": "4.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
     "install": "^0.13.0",
     "joi": "^17.13.3",
     "nestjs-pino": "^4.1.0",

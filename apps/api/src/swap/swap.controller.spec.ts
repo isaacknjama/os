@@ -1,6 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
-import { SupportedCurrencies } from '@bitsacco/common';
+import { TestingModule } from '@nestjs/testing';
+import { createTestingModuleWithValidation, SupportedCurrencies } from '@bitsacco/common';
 import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
 
@@ -9,7 +8,7 @@ describe('SwapController', () => {
   let swapService: SwapService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const module: TestingModule = await createTestingModuleWithValidation({
       controllers: [SwapController],
       providers: [
         {
@@ -27,7 +26,7 @@ describe('SwapController', () => {
           },
         },
       ],
-    }).compile();
+    });
 
     controller = module.get<SwapController>(SwapController);
     swapService = module.get<SwapService>(SwapService);

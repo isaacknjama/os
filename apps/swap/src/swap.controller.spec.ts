@@ -1,6 +1,12 @@
-import { Currency, btcFromKes } from '@bitsacco/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import {
+  Currency,
+  type OnrampSwapRequest,
+  btcFromKes,
+  createTestingModuleWithValidation,
+} from '@bitsacco/common';
+import { TestingModule } from '@nestjs/testing';
 import { SwapController } from './swap.controller';
+import { PrismaService } from './prisma.service';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 
@@ -8,9 +14,10 @@ const mock_rate = 8708520.117232416;
 
 describe('SwapController', () => {
   let swapController: SwapController;
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+    const app: TestingModule = await createTestingModuleWithValidation({
       imports: [],
       controllers: [SwapController],
       providers: [
@@ -21,10 +28,17 @@ describe('SwapController', () => {
             getBtcToKesRate: jest.fn().mockResolvedValue(mock_rate),
           },
         },
+        {
+          provide: PrismaService,
+          useValue: {
+            $connect: jest.fn(),
+          },
+        },
       ],
-    }).compile();
+    });
 
     swapController = app.get<SwapController>(SwapController);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   describe('root', () => {

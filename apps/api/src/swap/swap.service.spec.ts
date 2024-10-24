@@ -1,8 +1,9 @@
 import { ConfigService } from '@nestjs/config';
-import { Test, TestingModule } from '@nestjs/testing';
+import { TestingModule } from '@nestjs/testing';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
   btcFromKes,
+  createTestingModuleWithValidation,
   Currency,
   type QuoteRequest,
   type QuoteResponse,
@@ -49,7 +50,7 @@ describe('SwapService', () => {
       getClientByServiceName: jest.fn().mockReturnValue(mockSSC),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const module: TestingModule = await createTestingModuleWithValidation({
       providers: [
         ConfigService,
         {
@@ -65,7 +66,7 @@ describe('SwapService', () => {
           useValue: mockClientGrpc,
         },
       ],
-    }).compile();
+    });
 
     service = module.get<SwapService>(SwapService);
   });

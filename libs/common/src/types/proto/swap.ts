@@ -87,10 +87,17 @@ export interface OnrampSwapRequest {
    * If not specified, the service will create a new quote for the swap
    */
   quote?: Quote | undefined;
+  /** Swap initiator reference to the account this transaction is associated with. */
+  ref: string;
+  /**
+   * Amount to swap
+   * Any transaction fees will be deducted from this amount
+   */
+  amount: string;
   /** If provided, the service will attempt mobile money onramp */
   phone?: string | undefined;
-  /** Amount to swap */
-  amount: string;
+  /** If provided, the service will attempt to pay a Lightning Network invoice */
+  lightning?: string | undefined;
 }
 
 /** OnrampSwapResponse: Represents the response for an onramp swap. */
