@@ -1,7 +1,7 @@
 import * as Joi from 'joi';
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from '@bitsacco/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { SwapController } from './swap.controller';
@@ -9,6 +9,8 @@ import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
 import { IntasendService } from './intasend/intasend.service';
+import { EventsService } from './events/events.service';
+import { EventsController } from './events/events.controller';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { IntasendService } from './intasend/intasend.service';
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().required(),
         SWAP_GRPC_URL: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
         MOCK_BTC_KES_RATE: Joi.number(),
         CURRENCY_API_KEY: Joi.string(),
         DATABASE_URL: Joi.string().required(),
@@ -28,7 +32,14 @@ import { IntasendService } from './intasend/intasend.service';
     HttpModule,
     CacheModule.register(),
   ],
-  controllers: [SwapController],
-  providers: [SwapService, FxService, PrismaService, IntasendService],
+  controllers: [SwapController, EventsController],
+  providers: [
+    SwapService,
+    FxService,
+    PrismaService,
+    IntasendService,
+    EventsService,
+    ConfigService,
+  ],
 })
 export class SwapModule {}
