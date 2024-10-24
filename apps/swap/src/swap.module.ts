@@ -8,6 +8,7 @@ import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
+import { IntasendService } from './intasend/intasend.service';
 
 @Module({
   imports: [
@@ -19,6 +20,8 @@ import { PrismaService } from './prisma.service';
         MOCK_BTC_KES_RATE: Joi.number(),
         CURRENCY_API_KEY: Joi.string(),
         DATABASE_URL: Joi.string().required(),
+        INTASEND_PUBLIC_KEY: Joi.string().required(),
+        INTASEND_PRIVATE_KEY: Joi.string().required(),
       }),
     }),
     LoggerModule,
@@ -26,6 +29,6 @@ import { PrismaService } from './prisma.service';
     CacheModule.register(),
   ],
   controllers: [SwapController],
-  providers: [SwapService, FxService, PrismaService],
+  providers: [SwapService, FxService, PrismaService, IntasendService],
 })
 export class SwapModule {}

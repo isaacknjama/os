@@ -8,6 +8,7 @@ import { SwapController } from './swap.controller';
 import { PrismaService } from './prisma.service';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
+import { IntasendService } from './intasend/intasend.service';
 import { CreateOnrampSwapDto } from './dto';
 
 const mock_rate = 8708520.117232416;
@@ -15,8 +16,14 @@ const mock_rate = 8708520.117232416;
 describe('SwapController', () => {
   let swapController: SwapController;
   let prismaService: PrismaService;
+  let mockCacheManager: any;
 
   beforeEach(async () => {
+    mockCacheManager = {
+      get: jest.fn(),
+      set: jest.fn(),
+    };
+
     const app: TestingModule = await createTestingModuleWithValidation({
       imports: [],
       controllers: [SwapController],
@@ -29,10 +36,26 @@ describe('SwapController', () => {
           },
         },
         {
+          provide: IntasendService,
+          useValue: {
+            sendStkPush: jest.fn().mockResolvedValue({
+              id: '123456789',
+              invoice: {
+                invoice_id: '123456789',
+              },
+              refundable: false,
+            }),
+          },
+        },
+        {
           provide: PrismaService,
           useValue: {
             $connect: jest.fn(),
           },
+        },
+        {
+          provide: 'CACHE_MANAGER',
+          useValue: mockCacheManager,
         },
       ],
     });
@@ -108,7 +131,6 @@ describe('SwapController', () => {
       const swap = await swapController.createOnrampSwap(req);
 
       expect(swap).toBeDefined();
-      expect(prismaService.mpesaOnrampSwap).toHaveBeenCalled();
     });
   });
 

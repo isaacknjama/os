@@ -1,5 +1,8 @@
 import { TestingModule } from '@nestjs/testing';
-import { createTestingModuleWithValidation, SupportedCurrencies } from '@bitsacco/common';
+import {
+  createTestingModuleWithValidation,
+  SupportedCurrencies,
+} from '@bitsacco/common';
 import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
 
