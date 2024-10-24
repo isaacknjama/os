@@ -1,12 +1,16 @@
 services:
   api:
     container_name: api
+    # image: test-api-manual-build
     build:
       context: .
       dockerfile: ./apps/api/Dockerfile
       target: development
     command: bun dev api
     restart: always
+    depends_on:
+      - postgres
+      - swap
     env_file:
       - ./apps/api/.env
     ports:
@@ -15,12 +19,20 @@ services:
       - .:/usr/src/app
   swap:
     container_name: swap
+    # image: test-swap-manual-build
     build:
       context: .
       dockerfile: ./apps/swap/Dockerfile
       target: development
-    command: bun dev swap
+    command: sh -c "bun prisma migrate deploy --schema apps/swap/prisma/schema.prisma && bun prisma generate --schema apps/swap/prisma/schema.prisma && bun dev swap"
+    command: [
+        "sh",
+        "-c",
+        "bun prisma generate --schema apps/swap/prisma/schema.prisma && bun prisma migrate deploy --schema apps/swap/prisma/schema.prisma && bun dev swap"
+      ]
     restart: always
+    depends_on:
+      - postgres
     env_file:
       - ./apps/swap/.env
     ports:

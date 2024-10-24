@@ -1,7 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output = "../node_modules/.prisma/client"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -11,7 +11,7 @@ datasource db {
 
 model MpesaOnrampSwap {
   /// Unique identifier for the swap
-  id        String   @id @default(uuid())
+  id        String               @id @default(uuid())
   /// References the user who made the transaction. userId is the user's public key.
   userId    String
   /// References the account this transaction is associated with.
