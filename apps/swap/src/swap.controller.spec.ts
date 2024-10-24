@@ -1,5 +1,6 @@
 import {
   Currency,
+  SwapStatus,
   btcFromKes,
   createTestingModuleWithValidation,
 } from '@bitsacco/common';
@@ -16,7 +17,10 @@ const mock_rate = 8708520.117232416;
 describe('SwapController', () => {
   let swapController: SwapController;
   let prismaService: PrismaService;
-  let mockCacheManager: any;
+  let mockCacheManager: {
+    get: jest.Mock;
+    set: jest.Mock
+  };
 
   beforeEach(async () => {
     mockCacheManager = {
@@ -117,20 +121,32 @@ describe('SwapController', () => {
 
   describe('createOnrampSwap', () => {
     it('should create an onramp swap', async () => {
+      const cache = {
+        lightning: 'lnbtcexampleinvoicee',
+        phone: '0700000000',
+        amount: '100',
+        rate: mock_rate.toString(),
+        ref: 'test-onramp-swap',
+      };
+
+      (mockCacheManager.get as jest.Mock).mockImplementation((key: string) => cache);
+
       const req: CreateOnrampSwapDto = {
         quote: {
           id: 'dadad-bdjada-dadad',
           refreshIfExpired: false,
         },
         ref: 'test-onramp-swap',
-        phone: 'phone',
-        amount: '100',
-        lightning: 'lnbtc:adadadadadadd',
+        phone: cache.phone,
+        amount: cache.amount,
+        lightning: cache.lightning,
       };
 
       const swap = await swapController.createOnrampSwap(req);
 
       expect(swap).toBeDefined();
+      expect(swap.rate).toEqual(cache.rate);
+      expect(swap.status).toEqual(SwapStatus.PENDING);
     });
   });
 
