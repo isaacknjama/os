@@ -33,6 +33,7 @@ services:
     restart: always
     depends_on:
       - postgres
+      - redis
     env_file:
       - ./apps/swap/.env
     ports:
@@ -50,6 +51,12 @@ services:
       - '5432:5432'
     volumes:
       - postgres_datadir:/var/lib/postgresql/data
+    restart: always
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - '6379:6379'
     restart: always
 volumes:
   postgres_datadir:
