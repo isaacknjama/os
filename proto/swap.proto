@@ -71,7 +71,14 @@ message OnrampSwapRequest {
   // If not specified, the service will create a new quote for the swap
   optional Quote quote = 1;
 
-  reserved 2, 3, 4, 5, 6, 7, 8, 9;
+  // Swap initiator reference to the account this transaction is associated with.
+  string ref = 2;
+
+  // Amount to swap
+  // Any transaction fees will be deducted from this amount
+  string amount = 3;
+
+  reserved 4, 5, 6, 7, 8, 9;
 
   // Source of the swap
   oneof source {
@@ -79,8 +86,11 @@ message OnrampSwapRequest {
     string phone = 10;
   }
 
-  // Amount to swap
-  string amount = 11;
+  // Target of the swap
+  oneof target {
+    // If provided, the service will attempt to pay a Lightning Network invoice
+    string lightning = 11;
+  }
 }
 
 // OnrampSwapResponse: Represents the response for an onramp swap.
