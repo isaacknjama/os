@@ -41,15 +41,19 @@ export class FxService {
 
     const env = this.configService.get('NODE_ENV');
     const api_key = this.configService.get('CURRENCY_API_KEY');
-    const mock_rate = this.configService.get('MOCK_KES_BTC_RATE');
-
-    if (env !== 'production' && mock_rate) {
-      this.logger.log('Returning fake currency rates');
-      return { btcToKesRate: mock_rate };
-    }
+    const mock_rate = this.configService.get('MOCK_BTC_KES_RATE');
 
     if (!api_key) {
-      throw new Error('CURRENCY_API_KEY not found');
+      if (mock_rate) {
+        this.logger.log('Returning fake currency rates');
+        return { btcToKesRate: mock_rate };
+      }
+
+      if (env === 'production') {
+        throw new Error('CURRENCY_API_KEY not found');
+      }
+
+      throw new Error('Either CURRENCY_API_KEY or MOCK_BTC_KES_RATE must be configured');
     }
 
     const response = await firstValueFrom(

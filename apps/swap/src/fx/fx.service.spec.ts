@@ -83,12 +83,12 @@ describe('FxService Real', () => {
     expect(fxService).toBeDefined();
   });
 
-  it('dev: should use MOCK_KES_BTC_RATE config', async () => {
+  it('dev: should use MOCK_BTC_KES_RATE config', async () => {
     (mockCfg.get as jest.Mock).mockImplementation((key: string) => {
       switch (key) {
         case 'NODE_ENV':
           return 'dev';
-        case 'MOCK_KES_BTC_RATE':
+        case 'MOCK_BTC_KES_RATE':
           return mock_rate;
         default:
           return undefined;
@@ -98,28 +98,41 @@ describe('FxService Real', () => {
     await expect(await fxService.getBtcToKesRate()).toEqual(mock_rate);
   });
 
-  it('test: should use MOCK_KES_BTC_RATE config', async () => {
+  it('dev: throws error if MOCK_BTC_KES_RATE config are not set', async () => {
     (mockCfg.get as jest.Mock).mockImplementation((key: string) => {
       switch (key) {
         case 'NODE_ENV':
           return 'dev';
-        case 'MOCK_KES_BTC_RATE':
-          return mock_rate;
         default:
           return undefined;
       }
     });
 
-    await expect(await fxService.getBtcToKesRate()).toEqual(mock_rate);
+    await expect(fxService.getBtcToKesRate()).rejects.toThrow(
+      'Either CURRENCY_API_KEY or MOCK_BTC_KES_RATE must be configured',
+    );
   });
 
-  it('production: should ignore MOCK_KES_BTC_RATE config', async () => {
+  it('production: can use MOCK_BTC_KES_RATE config if CURRENCY_API_KEY is not set', async () => {
     (mockCfg.get as jest.Mock).mockImplementation((key: string) => {
       switch (key) {
         case 'NODE_ENV':
           return 'production';
-        case 'MOCK_KES_BTC_RATE':
+        case 'MOCK_BTC_KES_RATE':
           return mock_rate;
+        default:
+          return undefined;
+      }
+    });
+
+    await expect(await fxService.getBtcToKesRate()).toEqual(mock_rate);
+  });
+
+  it('production: throws error if CURRENCY_API_KEY and MOCK_BTC_KES_RATE config are not set', async () => {
+    (mockCfg.get as jest.Mock).mockImplementation((key: string) => {
+      switch (key) {
+        case 'NODE_ENV':
+          return 'production';
         default:
           return undefined;
       }
@@ -137,7 +150,7 @@ describe('FxService Real', () => {
           return 'production';
         case 'CURRENCY_API_KEY':
           return 'test-api-key';
-        case 'MOCK_KES_BTC_RATE':
+        case 'MOCK_BTC_KES_RATE':
           return mock_rate;
         default:
           return undefined;
