@@ -1,8 +1,10 @@
-import IntaSend from 'intasend-node';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { SendSTKPushResponse } from './intasend.types';
 import { SendSTKPushDto } from '../dto';
+
+// import IntaSend from 'intasend-node';
+import IntaSend = require('intasend-node');
 
 @Injectable()
 export class IntasendService implements OnModuleInit {

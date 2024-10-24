@@ -1,7 +1,6 @@
 import {
   btcFromKes,
   Currency,
-  FindSwapRequest,
   OnrampSwapResponse,
   QuoteRequest,
   QuoteResponse,
