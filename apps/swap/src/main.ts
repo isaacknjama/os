@@ -33,7 +33,7 @@ async function bootstrap() {
       host: redis_host,
       port: redis_port,
       retryAttempts: 2,
-      retryDelay: 100
+      retryDelay: 100,
     },
   });
 
