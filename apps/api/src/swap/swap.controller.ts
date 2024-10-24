@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Inject,
@@ -14,10 +15,10 @@ import {
   type SupportedCurrencyType,
   SupportedCurrencies,
   process_swap_update,
-  EVENTS_SERVICE_BUS
+  EVENTS_SERVICE_BUS,
 } from '@bitsacco/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 @Controller('swap')
 export class SwapController {
@@ -25,7 +26,7 @@ export class SwapController {
 
   constructor(
     private readonly swapService: SwapService,
-    @Inject(EVENTS_SERVICE_BUS) private readonly eventsClient: ClientProxy
+    @Inject(EVENTS_SERVICE_BUS) private readonly eventsClient: ClientProxy,
   ) {
     this.logger.log('SwapController initialized');
   }
@@ -87,9 +88,14 @@ export class SwapController {
     return this.swapService.findOfframpTransaction();
   }
 
-  @Post('update')
-  postSwapUpdate() {
-    this.eventsClient.emit(process_swap_update, {});
+  @Post('webhook')
+  @ApiOperation({
+    summary:
+      'Post updates to an acive swap. Used as a webhook by 3rd parties to notify transaction progress',
+  })
+  @ApiBody({})
+  postSwapUpdate(@Body() updates: any) {
+    this.eventsClient.emit(process_swap_update, updates);
     return { success: true };
   }
 }

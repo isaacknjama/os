@@ -44,10 +44,10 @@ import { SwapController, SwapService } from './swap';
           options: {
             host: configService.getOrThrow<string>('REDIS_HOST'),
             port: configService.getOrThrow<number>('REDIS_PORT'),
-          }
+          },
         }),
         inject: [ConfigService],
-      }
+      },
     ]),
   ],
   controllers: [SwapController],
