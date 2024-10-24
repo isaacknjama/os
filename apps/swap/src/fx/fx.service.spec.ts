@@ -1,52 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { createTestingModuleWithValidation } from '@bitsacco/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { HttpModule } from '@nestjs/axios';
 import { FxService } from './fx.service';
 
 const mock_rate = 8708520.117232416;
 
-describe('FxService Mocked', () => {
-  let mockFxService: FxService;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule, HttpModule, CacheModule.register()],
-      providers: [
-        ConfigService,
-        {
-          provide: FxService,
-          useValue: {
-            getBtcToKesRate: jest.fn(() => {
-              return mock_rate;
-            }),
-          },
-        },
-        {
-          provide: 'CACHE_MANAGER',
-          useValue: {
-            get: jest.fn(),
-            set: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
-
-    mockFxService = module.get<FxService>(FxService);
-  });
-
-  it('should be defined', () => {
-    expect(mockFxService).toBeDefined();
-  });
-
-  it('should return a rate', async () => {
-    const rate = await mockFxService.getBtcToKesRate();
-
-    expect(rate).toBeDefined();
-  });
-});
-
-describe('FxService Real', () => {
+describe('FxService', () => {
   let fxService: FxService;
   let mockCfg: { get: jest.Mock };
   let mockCacheManager: any;
@@ -61,20 +22,20 @@ describe('FxService Real', () => {
       set: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const module: TestingModule = await createTestingModuleWithValidation({
       imports: [ConfigModule, HttpModule, CacheModule.register()],
       providers: [
+        FxService,
         {
           provide: ConfigService,
           useValue: mockCfg,
         },
-        FxService,
         {
           provide: 'CACHE_MANAGER',
           useValue: mockCacheManager,
         },
       ],
-    }).compile();
+    });
 
     fxService = module.get<FxService>(FxService);
   });
