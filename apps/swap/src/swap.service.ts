@@ -2,19 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   btcFromKes,
   FindSwapRequest,
-  OnrampSwapRequest,
   OnrampSwapResponse,
   QuoteRequest,
   QuoteResponse,
 } from '@bitsacco/common';
 import { v4 as uuidv4 } from 'uuid';
 import { FxService } from './fx/fx.service';
+import { PrismaService } from './prisma.service';
+import { CreateOnrampSwapDto } from './dto';
 
 @Injectable()
 export class SwapService {
   private readonly logger = new Logger(SwapService.name);
 
-  constructor(private readonly fxService: FxService) {
+  constructor(
+    private readonly fxService: FxService,
+    private readonly prismaService: PrismaService,
+  ) {
     this.logger.log('SwapService initialized');
   }
 
@@ -46,9 +50,11 @@ export class SwapService {
 
   async createOnrampSwap({
     quote,
-    phone,
+    ref,
     amount,
-  }: OnrampSwapRequest): Promise<OnrampSwapResponse> {
+    lightning,
+    phone,
+  }: CreateOnrampSwapDto): Promise<OnrampSwapResponse> {
     return Promise.reject('Not implemented');
   }
 

@@ -2,12 +2,12 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import {
   type FindSwapRequest,
-  type OnrampSwapRequest,
   type QuoteRequest,
   SwapServiceController,
   SwapServiceControllerMethods,
 } from '@bitsacco/common';
 import { SwapService } from './swap.service';
+import { CreateOnrampSwapDto } from './dto';
 
 @Controller()
 @SwapServiceControllerMethods()
@@ -20,7 +20,7 @@ export class SwapController implements SwapServiceController {
   }
 
   @GrpcMethod()
-  createOnrampSwap(request: OnrampSwapRequest) {
+  createOnrampSwap(request: CreateOnrampSwapDto) {
     return this.swapService.createOnrampSwap(request);
   }
 

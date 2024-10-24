@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { Logger } from 'nestjs-pino';
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ReflectionService } from '@grpc/reflection';
 import { SwapModule } from './swap.module';
@@ -23,6 +24,9 @@ async function bootstrap() {
 
   // setup pino logging
   app.useLogger(app.get(Logger));
+
+  // setup validation
+  app.useGlobalPipes(new ValidationPipe());
 
   await app.listen();
 }

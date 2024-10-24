@@ -53,7 +53,9 @@ export class FxService {
         throw new Error('CURRENCY_API_KEY not found');
       }
 
-      throw new Error('Either CURRENCY_API_KEY or MOCK_BTC_KES_RATE must be configured');
+      throw new Error(
+        'Either CURRENCY_API_KEY or MOCK_BTC_KES_RATE must be configured',
+      );
     }
 
     const response = await firstValueFrom(

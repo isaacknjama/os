@@ -1,6 +1,5 @@
 import {
   Currency,
-  type OnrampSwapRequest,
   btcFromKes,
   createTestingModuleWithValidation,
 } from '@bitsacco/common';
@@ -9,6 +8,7 @@ import { SwapController } from './swap.controller';
 import { PrismaService } from './prisma.service';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
+import { CreateOnrampSwapDto } from './dto';
 
 const mock_rate = 8708520.117232416;
 
@@ -94,16 +94,21 @@ describe('SwapController', () => {
 
   describe('createOnrampSwap', () => {
     it('should create an onramp swap', async () => {
-      expect(
-        swapController.createOnrampSwap({
-          quote: {
-            id: 'dadad-bdjada-dadad',
-            refreshIfExpired: false,
-          },
-          phone: 'phone',
-          amount: '100',
-        }),
-      ).rejects.toThrow('Not implemented');
+      const req: CreateOnrampSwapDto = {
+        quote: {
+          id: 'dadad-bdjada-dadad',
+          refreshIfExpired: false,
+        },
+        ref: 'test-onramp-swap',
+        phone: 'phone',
+        amount: '100',
+        lightning: 'lnbtc:adadadadadadd',
+      };
+
+      const swap = await swapController.createOnrampSwap(req);
+
+      expect(swap).toBeDefined();
+      expect(prismaService.mpesaOnrampSwap).toHaveBeenCalled();
     });
   });
 
