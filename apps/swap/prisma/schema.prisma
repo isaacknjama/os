@@ -12,28 +12,39 @@ datasource db {
 model MpesaOnrampSwap {
   /// Unique identifier for the swap
   id        String               @id @default(uuid())
-  /// References the user who made the transaction. userId is the user's public key.
+  /// Tracks progress of the swap
+  state     SwapTransactionState
+  /// References the user who made the transaction.
   userId    String
-  /// References the account this transaction is associated with.
-  /// Example:
-  ///  - `chama:${chamaId}`
-  ///  - `sacco:${saccoId}`
-  account   String
+  /// References the onramp Mpesa transaction ID.
+  mpesaId   String
   /// Lightning invoice to pay.
   lightning String
-  /// Incoming Mpesa transaction ID.
-  mpesa     String
-  /// State and progress of the swap
-  state     MpesaOnrampSwapState
-
+  /// Retry count tracker
+  retryCount Int
+  /// Timestamps
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
 }
 
-enum MpesaOnrampSwapState {
+enum SwapTransactionState {
   PENDING
   PROCESSING
   FAILED
   COMPLETE
+  RETRY
+}
+
+model IntasendMpesaTransaction {
+  id         String               @id @default(uuid())
+  state      SwapTransactionState
+  apiRef     String
+  value      String
+  charges    String
+  netAmount  String
+  currency   String
+  account    String
+  retryCount Int
+  createdAt  String
+  updatedAt  String
 }
