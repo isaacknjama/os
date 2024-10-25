@@ -2,10 +2,10 @@ import { TestingModule } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createTestingModuleWithValidation } from '@bitsacco/common';
 import { IntasendService } from './intasend.service';
+import { PrismaService } from '../prisma.service';
 import { SendSTKPushDto } from '../dto';
 
 describe('IntasendService', () => {
-  let intasendService: IntasendService;
   let mockCfg: jest.Mocked<ConfigService> = {
     getOrThrow: jest.fn(),
   } as any;
@@ -14,19 +14,6 @@ describe('IntasendService', () => {
     mockCfg = {
       getOrThrow: jest.fn(),
     } as any;
-
-    // const module: TestingModule = await createTestingModuleWithValidation({
-    //   imports: [ConfigModule],
-    //   providers: [
-    //     IntasendService,
-    //     {
-    //       provide: ConfigService,
-    //       useValue: mockCfg,
-    //     },
-    //   ],
-    // });
-
-    // intasendService = module.get<IntasendService>(IntasendService);
   });
 
   it('init: throws error if INTASEND_PUBLIC_KEY config is not set', async () => {
@@ -54,7 +41,7 @@ describe('IntasendService', () => {
     );
   });
 
-  it('sendStkPush: should throw a 401 error when INTASEND_PRIVATE_KEY config is not valid', async () => {
+  it('sendMpesaStkPush: should throw a 401 error when INTASEND_PRIVATE_KEY config is not valid', async () => {
     (mockCfg.getOrThrow as jest.Mock).mockImplementation((key: string) => {
       switch (key) {
         case 'INTASEND_PUBLIC_KEY':
@@ -75,7 +62,7 @@ describe('IntasendService', () => {
     const intasendService = await createIntasendService(mockCfg);
     expect(intasendService).toBeDefined();
 
-    await expect(intasendService.sendStkPush(payload)).rejects.toThrow();
+    await expect(intasendService.sendMpesaStkPush(payload)).rejects.toThrow();
   });
 });
 
@@ -87,6 +74,12 @@ async function createIntasendService(mockCfg: jest.Mocked<ConfigService>) {
       {
         provide: ConfigService,
         useValue: mockCfg,
+      },
+      {
+        provide: PrismaService,
+        useValue: {
+          $connect: jest.fn(),
+        },
       },
     ],
   });

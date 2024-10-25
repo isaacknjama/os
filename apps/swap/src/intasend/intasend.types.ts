@@ -9,12 +9,12 @@ export enum MpesaTractactionState {
 export interface MpesaInvoice {
   invoice_id: string;
   state: MpesaTractactionState;
+  api_ref: string;
+  value: string;
   charges: string;
   net_amount: string;
   currency: string;
-  value: string;
   account: string;
-  api_ref: string;
   retry_count: number;
   created_at: string;
   updated_at: string;
@@ -29,7 +29,13 @@ export interface MpesaTransactionUpdate extends MpesaInvoice {
 export interface SendSTKPushResponse {
   id: string;
   invoice: MpesaInvoice;
+  state: MpesaTractactionState;
   refundable: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface MpesaTxTracker {
+  id: string;
+  state: MpesaTractactionState;
 }
