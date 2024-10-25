@@ -1,14 +1,17 @@
 import { TestingModule } from '@nestjs/testing';
 import {
   createTestingModuleWithValidation,
+  EVENTS_SERVICE_BUS,
   SupportedCurrencies,
 } from '@bitsacco/common';
 import { SwapController } from './swap.controller';
 import { SwapService } from './swap.service';
+import { ClientProxy } from '@nestjs/microservices';
 
 describe('SwapController', () => {
   let controller: SwapController;
   let swapService: SwapService;
+  let serviceBus: ClientProxy;
 
   beforeEach(async () => {
     const module: TestingModule = await createTestingModuleWithValidation({
@@ -28,11 +31,18 @@ describe('SwapController', () => {
             postSwapUpdate: jest.fn(),
           },
         },
+        {
+          provide: EVENTS_SERVICE_BUS,
+          useValue: {
+            emit: jest.fn(),
+          }
+        }
       ],
     });
 
     controller = module.get<SwapController>(SwapController);
     swapService = module.get<SwapService>(SwapService);
+    serviceBus = module.get<ClientProxy>(EVENTS_SERVICE_BUS);
   });
 
   it('should be defined', () => {
@@ -105,8 +115,8 @@ describe('SwapController', () => {
 
   describe('postSwapUpdate', () => {
     it('should call swapService.postSwapUpdate', () => {
-      controller.postSwapUpdate();
-      expect(swapService.postSwapUpdate).toHaveBeenCalled();
+      controller.postSwapUpdate({});
+      expect(serviceBus.emit).toHaveBeenCalled();
     });
   });
 });
