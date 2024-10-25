@@ -35,8 +35,8 @@ describe('SwapController', () => {
           provide: EVENTS_SERVICE_BUS,
           useValue: {
             emit: jest.fn(),
-          }
-        }
+          },
+        },
       ],
     });
 

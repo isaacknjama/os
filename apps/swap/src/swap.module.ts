@@ -9,8 +9,7 @@ import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
 import { IntasendService } from './intasend/intasend.service';
-import { EventsService } from './events/events.service';
-import { EventsController } from './events/events.controller';
+import { EventsController } from './events.controller';
 
 @Module({
   imports: [
@@ -38,7 +37,6 @@ import { EventsController } from './events/events.controller';
     FxService,
     PrismaService,
     IntasendService,
-    EventsService,
     ConfigService,
   ],
 })

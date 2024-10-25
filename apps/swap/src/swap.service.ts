@@ -13,7 +13,11 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
 import { IntasendService } from './intasend/intasend.service';
-import { CreateOnrampSwapDto, FindSwapDto } from './dto';
+import {
+  CreateOnrampSwapDto,
+  FindSwapDto,
+  MpesaTransactionUpdateDto,
+} from './dto';
 
 @Injectable()
 export class SwapService {
@@ -122,5 +126,10 @@ export class SwapService {
       rate: swap.rate,
       status: SwapStatus.PENDING,
     };
+  }
+
+  async processSwapUpdate(data: MpesaTransactionUpdateDto) {
+    this.logger.log('Processing Swap Update');
+    this.logger.log(data);
   }
 }
