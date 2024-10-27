@@ -11,7 +11,7 @@ import { PrismaService } from './prisma.service';
 import { SwapTransactionState } from '.prisma/client';
 import { IntasendService } from './intasend/intasend.service';
 import { MpesaTractactionState } from './intasend/intasend.types';
-import { CreateOnrampSwapDto } from './dto';
+import { CreateOnrampSwapDto, MpesaTransactionUpdateDto } from './dto';
 
 const mock_rate = 8708520.117232416;
 
@@ -43,18 +43,29 @@ describe('SwapService', () => {
         findUniqueOrThrow: jest.fn().mockImplementation(() => {
           throw 'error';
         }),
+        update: jest.fn().mockImplementation(() => ({
+          id: 'dadad-bdjada-dadad',
+          state: SwapTransactionState.PENDING,
+          rate: mock_rate.toString(),
+        })),
       },
     } as unknown as PrismaService;
 
     mockIntasendService = {
-      sendMpesaStkPush: jest.fn().mockResolvedValue({
+      sendMpesaStkPush: jest.fn().mockImplementation(() => ({
+        id: '123456789',
+        invoice: {
+          invoice_id: '123456789',
+        },
+        refundable: false,
+      })),
+      updateMpesaTx: jest.fn().mockResolvedValue({
         id: '123456789',
         invoice: {
           invoice_id: '123456789',
         },
         refundable: false,
       }),
-      updateMpesaTx: jest.fn(),
     } as unknown as IntasendService;
 
     const app: TestingModule = await createTestingModuleWithValidation({
@@ -212,14 +223,43 @@ describe('SwapService', () => {
 
   describe('processSwapUpdate', () => {
     it('should update mpesa tx', async () => {
-      await swapService.processSwapUpdate({});
-      expect(mockIntasendService.updateMpesaTx).toHaveBeenCalled();
-    });
+      const cache = {
+        lightning: 'lnbtcexampleinvoicee',
+        phone: '0700000000',
+        amount: '100',
+        rate: mock_rate.toString(),
+        ref: 'test-onramp-swap',
+        state: MpesaTractactionState.Pending,
+      };
 
-    it('should lookup a swap in db', async () => {
+      (mockCacheManager.getOrThrow as jest.Mock).mockImplementation(
+        (_key: string) => cache,
+      );
+
+      const req: MpesaTransactionUpdateDto = {
+        invoice_id: '123456789',
+        state: MpesaTractactionState.Complete,
+        charges: '1',
+        net_amount: '99',
+        currency: 'KES',
+        value: '100',
+        account: '0700000000',
+        api_ref: 'mpesa-onramp',
+        retry_count: 0,
+        created_at: '2021-08-01T00:00:00Z',
+        updated_at: '2024-10-01T00:00:00Z',
+        failed_reason: null,
+        failed_code: null,
+        challenge: 'BITSACCO-TEST',
+      };
+      await swapService.processSwapUpdate(req);
+      expect(mockIntasendService.updateMpesaTx).toHaveBeenCalled();
+      expect(mockCacheManager.getOrThrow).toHaveBeenCalled();
       expect(
         mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow,
       ).toHaveBeenCalled();
+      expect(mockPrismaService.mpesaOnrampSwap.create).toHaveBeenCalled();
+      expect(mockPrismaService.mpesaOnrampSwap.update).toHaveBeenCalled();
     });
   });
 });
