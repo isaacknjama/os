@@ -10,6 +10,7 @@ import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
 import { IntasendService } from './intasend/intasend.service';
 import { EventsController } from './events.controller';
+import { FedimintService } from './fedimint/fedimint.service';
 
 @Module({
   imports: [
@@ -25,6 +26,10 @@ import { EventsController } from './events.controller';
         DATABASE_URL: Joi.string().required(),
         INTASEND_PUBLIC_KEY: Joi.string().required(),
         INTASEND_PRIVATE_KEY: Joi.string().required(),
+        FEDIMINT_CLIENTD_BASE_URL: Joi.string().required(),
+        FEDIMINT_CLIENTD_PASSWORD: Joi.string().required(),
+        FEDIMINT_FEDERATION_ID: Joi.string().required(),
+        FEDIMINT_GATEWAY_ID: Joi.string().required(),
       }),
     }),
     LoggerModule,
@@ -38,6 +43,7 @@ import { EventsController } from './events.controller';
     PrismaService,
     IntasendService,
     ConfigService,
+    FedimintService,
   ],
 })
 export class SwapModule {}

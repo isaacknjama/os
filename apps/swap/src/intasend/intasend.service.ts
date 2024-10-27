@@ -20,8 +20,6 @@ export class IntasendService implements OnModuleInit {
   }
 
   onModuleInit() {
-    this.logger.log('IntasendService initialized');
-
     const pubkey = this.configService.getOrThrow<string>('INTASEND_PUBLIC_KEY');
     const privkey = this.configService.getOrThrow<string>(
       'INTASEND_PRIVATE_KEY',
@@ -36,6 +34,7 @@ export class IntasendService implements OnModuleInit {
     }
 
     this.intasend = new IntaSend(pubkey, privkey, test_mode);
+    this.logger.log('IntasendService initialized');
   }
 
   async sendMpesaStkPush(payload: SendSTKPushDto): Promise<MpesaTxTracker> {
