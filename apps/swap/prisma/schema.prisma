@@ -17,7 +17,7 @@ model MpesaOnrampSwap {
   /// References the user who made the transaction.
   userId    String
   /// References the onramp Mpesa transaction ID.
-  mpesaId   String
+  mpesaId   String @unique
   /// Lightning invoice to pay.
   lightning String
   /// Retry count tracker

@@ -18,6 +18,7 @@ import {
   FindSwapDto,
   MpesaTransactionUpdateDto,
 } from './dto';
+import { MpesaTractactionState } from './intasend/intasend.types';
 
 @Injectable()
 export class SwapService {
@@ -85,7 +86,7 @@ export class SwapService {
       });
     }
 
-    const resp = await this.intasendService.sendStkPush({
+    const { id, state } = await this.intasendService.sendMpesaStkPush({
       amount: Number(amount),
       phone_number: phone,
       api_ref: ref,
@@ -94,42 +95,85 @@ export class SwapService {
     // We record stk push response to a temporary cache
     // so we can track status of the swap later
     this.cacheManager.set(
-      resp.id,
+      id,
       {
         lightning,
         phone,
         amount,
         rate: currentQuote.rate,
+        state,
         ref,
       },
       this.CACHE_TTL_SECS,
     );
 
-    // TODO: return stream of responses with every status change?
     return {
-      id: resp.id,
+      id,
       rate: currentQuote.rate,
       status: SwapStatus.PENDING,
     };
   }
 
   async findOnrampSwap({ id }: FindSwapDto): Promise<OnrampSwapResponse> {
-    // TODO: Check for swap in DB, otherwise try return swap from cache
-    const swap = await this.cacheManager.get(id);
+    let swap;
+    try {
+      // Look up swap in db
+      swap = await this.prismaService.mpesaOnrampSwap.findUniqueOrThrow({
+        where: {
+          id,
+        },
+      });
+    } catch (_error) {
+      this.logger.warn(`Swap not found in DB : ${id}`);
+    }
+
+    try {
+      // Look up swap in cache
+      swap = await this.cacheManager.get(id);
+    } catch (_error) {
+      this.logger.warn(`Swap not found in cache : ${id}`);
+    }
 
     if (!swap) {
-      throw new Error('Swap not found');
+      throw new Error('Swap not found in db or cache');
     }
 
     return {
       id,
       rate: swap.rate,
-      status: SwapStatus.PENDING,
+      status: mapMpesaTxStateToSwapStatus(swap.state),
     };
   }
 
   async processSwapUpdate(data: MpesaTransactionUpdateDto) {
+    // verify that swap is already recorded in DB
+    const swap = await this.prismaService.mpesaOnrampSwap.findUnique({
+      where: {
+        mpesaId: data.invoice_id,
+      },
+    });
+
+    // record mpesa transaction using intasend service
+    // check status:
+    //  - if status has progresed to complete, do the actual swap using fedimint service
+
     this.logger.log('Processing Swap Update');
     this.logger.log(data);
+
+    return;
+  }
+}
+
+function mapMpesaTxStateToSwapStatus(state: MpesaTractactionState): SwapStatus {
+  switch (state) {
+    case MpesaTractactionState.Pending:
+      return SwapStatus.PENDING;
+    case MpesaTractactionState.Failed:
+      return SwapStatus.FAILED;
+    case MpesaTractactionState.Complete:
+      return SwapStatus.COMPLETE;
+    case MpesaTractactionState.Retry:
+    case MpesaTractactionState.Processing:
+      return SwapStatus.PROCESSING;
   }
 }

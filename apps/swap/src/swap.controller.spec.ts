@@ -10,17 +10,25 @@ import { PrismaService } from './prisma.service';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 import { IntasendService } from './intasend/intasend.service';
+import { MpesaTractactionState } from './intasend/intasend.types';
 import { CreateOnrampSwapDto } from './dto';
 
 const mock_rate = 8708520.117232416;
 
 describe('SwapController', () => {
   let swapController: SwapController;
-  let prismaService: PrismaService;
   let mockCacheManager: {
     get: jest.Mock;
     set: jest.Mock;
   };
+  let mockPrismaService: PrismaService = {
+    $connect: jest.fn(),
+    mpesaOnrampSwap: {
+      findUniqueOrThrow: jest.fn().mockImplementation(() => {
+        throw 'error';
+      }),
+    },
+  } as unknown as PrismaService;
 
   beforeEach(async () => {
     mockCacheManager = {
@@ -42,7 +50,7 @@ describe('SwapController', () => {
         {
           provide: IntasendService,
           useValue: {
-            sendStkPush: jest.fn().mockResolvedValue({
+            sendMpesaStkPush: jest.fn().mockResolvedValue({
               id: '123456789',
               invoice: {
                 invoice_id: '123456789',
@@ -53,9 +61,7 @@ describe('SwapController', () => {
         },
         {
           provide: PrismaService,
-          useValue: {
-            $connect: jest.fn(),
-          },
+          useValue: mockPrismaService,
         },
         {
           provide: 'CACHE_MANAGER',
@@ -65,7 +71,6 @@ describe('SwapController', () => {
     });
 
     swapController = app.get<SwapController>(SwapController);
-    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   describe('root', () => {
@@ -156,17 +161,27 @@ describe('SwapController', () => {
   });
 
   describe('findOnrampSwap', () => {
-    it('should return a known swap is in cache', async () => {
+    it('should lookup a swap in db', async () => {
+      expect(
+        swapController.findOnrampSwap({
+          id: 'dadad-bdjada-dadad',
+        }),
+      ).rejects.toThrow('Swap not found in db or cache');
+      expect(mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow).toHaveBeenCalled();
+    });
+
+    it('should look up swap in cache if swap is not in db', async () => {
       const cache = {
         lightning: 'lnbtcexampleinvoicee',
         phone: '0700000000',
         amount: '100',
         rate: mock_rate.toString(),
         ref: 'test-onramp-swap',
+        state: MpesaTractactionState.Pending,
       };
 
       (mockCacheManager.get as jest.Mock).mockImplementation(
-        (key: string) => cache,
+        (_key: string) => cache,
       );
 
       const swap = await swapController.findOnrampSwap({
@@ -176,16 +191,7 @@ describe('SwapController', () => {
       expect(swap).toBeDefined();
       expect(swap.rate).toEqual(cache.rate);
       expect(swap.status).toEqual(SwapStatus.PENDING);
+      expect(mockCacheManager.get).toHaveBeenCalled();
     });
-
-    it('should throw an error if swap is unknown', async () => {
-      expect(
-        swapController.findOnrampSwap({
-          id: 'dadad-bdjada-dadad',
-        }),
-      ).rejects.toThrow('Swap not found');
-    });
-
-    // TODO: Verify find swap already persisted to DB
   });
 });
