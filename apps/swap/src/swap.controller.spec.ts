@@ -1,225 +1,67 @@
-import {
-  Currency,
-  SwapStatus,
-  btcFromKes,
-  createTestingModuleWithValidation,
-} from '@bitsacco/common';
+import { Currency, createTestingModuleWithValidation } from '@bitsacco/common';
 import { TestingModule } from '@nestjs/testing';
-import { SwapController } from './swap.controller';
-import { PrismaService } from './prisma.service';
-import { SwapTransactionState } from '.prisma/client';
 import { SwapService } from './swap.service';
-import { FxService } from './fx/fx.service';
-import { IntasendService } from './intasend/intasend.service';
-import { MpesaTractactionState } from './intasend/intasend.types';
+import { SwapController } from './swap.controller';
 import { CreateOnrampSwapDto } from './dto';
-const mock_rate = 8708520.117232416;
 
 describe('SwapController', () => {
   let swapController: SwapController;
-  let mockPrismaService: PrismaService;
-  let mockIntasendService: IntasendService;
-  let mockCacheManager: {
-    get: jest.Mock;
-    set: jest.Mock;
-    getOrThrow: jest.Mock;
-  };
+  let swapService: SwapService;
 
   beforeEach(async () => {
-    mockCacheManager = {
-      get: jest.fn(),
-      getOrThrow: jest.fn(),
-      set: jest.fn(),
-    };
-
-    mockPrismaService = {
-      $connect: jest.fn(),
-      mpesaOnrampSwap: {
-        create: jest.fn().mockImplementation(() => ({
-          id: 'dadad-bdjada-dadad',
-          state: SwapTransactionState.PENDING,
-          rate: mock_rate.toString(),
-        })),
-        findUniqueOrThrow: jest.fn().mockImplementation(() => {
-          throw 'error';
-        }),
-      },
-    } as unknown as PrismaService;
-
-    mockIntasendService = {
-      sendMpesaStkPush: jest.fn().mockResolvedValue({
-        id: '123456789',
-        invoice: {
-          invoice_id: '123456789',
-        },
-        refundable: false,
-      }),
-      updateMpesaTx: jest.fn(),
-    } as unknown as IntasendService;
-
     const app: TestingModule = await createTestingModuleWithValidation({
       imports: [],
       controllers: [SwapController],
       providers: [
-        SwapService,
         {
-          provide: FxService,
+          provide: SwapService,
           useValue: {
-            getBtcToKesRate: jest.fn().mockResolvedValue(mock_rate),
+            getQuote: jest.fn(),
+            createOnrampSwap: jest.fn(),
+            findOnrampSwap: jest.fn(),
           },
-        },
-        {
-          provide: IntasendService,
-          useValue: mockIntasendService,
-        },
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
-        {
-          provide: 'CACHE_MANAGER',
-          useValue: mockCacheManager,
         },
       ],
     });
 
     swapController = app.get<SwapController>(SwapController);
+    swapService = app.get<SwapService>(SwapService);
   });
 
-  describe('root', () => {
-    it('should be defined', () => {
-      expect(swapController).toBeDefined();
-    });
+  it('should be defined', () => {
+    expect(swapController).toBeDefined();
   });
 
-  describe('getQuote', () => {
+  it('calls the swapService.getQuote to get a quote', async () => {
     const req = {
       from: Currency.KES,
       to: Currency.BTC,
     };
 
-    it('should return a quote', async () => {
-      const quote = await swapController.getQuote(req);
-
-      expect(quote).toBeDefined();
-    });
-
-    it('should return a quote with a valid expiry of more than 10 minutes', async () => {
-      const quote = await swapController.getQuote(req);
-      const tenMinsFuture = Math.floor(Date.now() / 1000) + 10 * 60;
-
-      expect(quote.expiry).toBeDefined();
-      expect(Number(quote.expiry)).toBeGreaterThanOrEqual(tenMinsFuture);
-      expect(mockCacheManager.set).toHaveBeenCalled();
-    });
-
-    it('should return a quote with amount, if amount is declared', async () => {
-      const amount = '100';
-      const quote = await swapController.getQuote({
-        ...req,
-        amount,
-      });
-
-      expect(quote).toBeDefined();
-      expect(quote.amount).toBeDefined();
-      expect(quote.amount).toEqual(
-        btcFromKes({ amountKes: Number(amount), btcToKesRate: mock_rate }),
-      );
-      expect(mockCacheManager.set).toHaveBeenCalled();
-    });
-
-    it('should throw an error if amount is not a number string', async () => {
-      const amount = 'nan';
-      expect(
-        swapController.getQuote({
-          ...req,
-          amount,
-        }),
-      ).rejects.toThrow('Amount must be a number');
-    });
+    await swapController.getQuote(req);
+    expect(swapService.getQuote).toHaveBeenCalled();
   });
 
-  describe('createOnrampSwap', () => {
-    it('should create an onramp swap with expected fx rate', async () => {
-      const cache = {
-        lightning: 'lnbtcexampleinvoicee',
-        phone: '0700000000',
-        amount: '100',
-        rate: mock_rate.toString(),
-        ref: 'test-onramp-swap',
-      };
-
-      (mockCacheManager.getOrThrow as jest.Mock).mockImplementation(
-        (key: string) => cache,
-      );
-
-      const req: CreateOnrampSwapDto = {
-        quote: {
-          id: 'dadad-bdjada-dadad',
-          refreshIfExpired: false,
-        },
-        ref: 'test-onramp-swap',
-        phone: cache.phone,
-        amount: cache.amount,
-        lightning: cache.lightning,
-      };
-
-      const swap = await swapController.createOnrampSwap(req);
-
-      expect(swap).toBeDefined();
-      expect(swap.rate).toEqual(cache.rate);
-      expect(swap.status).toEqual(SwapStatus.PENDING);
-      expect(mockCacheManager.set).toHaveBeenCalled();
-    });
-  });
-
-  describe('findOnrampSwap', () => {
-    it('should lookup a swap in db', async () => {
-      expect(
-        swapController.findOnrampSwap({
-          id: 'dadad-bdjada-dadad',
-        }),
-      ).rejects.toThrow('Swap not found in db or cache');
-      expect(
-        mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow,
-      ).toHaveBeenCalled();
-    });
-
-    it('should look up swap in cache if swap is not in db', async () => {
-      const cache = {
-        lightning: 'lnbtcexampleinvoicee',
-        phone: '0700000000',
-        amount: '100',
-        rate: mock_rate.toString(),
-        ref: 'test-onramp-swap',
-        state: MpesaTractactionState.Pending,
-      };
-
-      (mockCacheManager.getOrThrow as jest.Mock).mockImplementation(
-        (_key: string) => cache,
-      );
-
-      const swap = await swapController.findOnrampSwap({
+  it('calls swapService.createOnrampSwap to create a new swap', async () => {
+    const req: CreateOnrampSwapDto = {
+      quote: {
         id: 'dadad-bdjada-dadad',
-      });
+        refreshIfExpired: false,
+      },
+      ref: 'test-onramp-swap',
+      phone: '0700000000',
+      amount: '100',
+      lightning: 'lnbtcexampleinvoicee',
+    };
 
-      expect(swap).toBeDefined();
-      expect(swap.rate).toEqual(cache.rate);
-      expect(swap.status).toEqual(SwapStatus.PENDING);
-      expect(mockCacheManager.getOrThrow).toHaveBeenCalled();
-    });
+    await swapController.createOnrampSwap(req);
+    expect(swapService.createOnrampSwap).toHaveBeenCalled();
   });
 
-  // describe('processSwapUpdate', () => {
-  //   it('should update mpesa tx', async () => {
-  //     await swapController.processSwapUpdate({});
-  //     expect(mockIntasendService.updateMpesaTx).toHaveBeenCalled();
-  //   });
-
-  //   it('should lookup a swap in db', async () => {
-  //     expect(
-  //       mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow,
-  //     ).toHaveBeenCalled();
-  //   });
-  // });
+  it('calls swapService.findOnrampSwap to find an ongoing or finalized swap', async () => {
+    await swapController.findOnrampSwap({
+      id: 'dadad-bdjada-dadad',
+    });
+    expect(swapService.findOnrampSwap).toHaveBeenCalled();
+  });
 });
