@@ -7,34 +7,55 @@ import {
 import { TestingModule } from '@nestjs/testing';
 import { SwapController } from './swap.controller';
 import { PrismaService } from './prisma.service';
+import { SwapTransactionState } from '.prisma/client';
 import { SwapService } from './swap.service';
 import { FxService } from './fx/fx.service';
 import { IntasendService } from './intasend/intasend.service';
 import { MpesaTractactionState } from './intasend/intasend.types';
 import { CreateOnrampSwapDto } from './dto';
-
 const mock_rate = 8708520.117232416;
 
 describe('SwapController', () => {
   let swapController: SwapController;
+  let mockPrismaService: PrismaService;
+  let mockIntasendService: IntasendService;
   let mockCacheManager: {
     get: jest.Mock;
     set: jest.Mock;
+    getOrThrow: jest.Mock;
   };
-  let mockPrismaService: PrismaService = {
-    $connect: jest.fn(),
-    mpesaOnrampSwap: {
-      findUniqueOrThrow: jest.fn().mockImplementation(() => {
-        throw 'error';
-      }),
-    },
-  } as unknown as PrismaService;
 
   beforeEach(async () => {
     mockCacheManager = {
       get: jest.fn(),
+      getOrThrow: jest.fn(),
       set: jest.fn(),
     };
+
+    mockPrismaService = {
+      $connect: jest.fn(),
+      mpesaOnrampSwap: {
+        create: jest.fn().mockImplementation(() => ({
+          id: 'dadad-bdjada-dadad',
+          state: SwapTransactionState.PENDING,
+          rate: mock_rate.toString(),
+        })),
+        findUniqueOrThrow: jest.fn().mockImplementation(() => {
+          throw 'error';
+        }),
+      },
+    } as unknown as PrismaService;
+
+    mockIntasendService = {
+      sendMpesaStkPush: jest.fn().mockResolvedValue({
+        id: '123456789',
+        invoice: {
+          invoice_id: '123456789',
+        },
+        refundable: false,
+      }),
+      updateMpesaTx: jest.fn(),
+    } as unknown as IntasendService;
 
     const app: TestingModule = await createTestingModuleWithValidation({
       imports: [],
@@ -49,15 +70,7 @@ describe('SwapController', () => {
         },
         {
           provide: IntasendService,
-          useValue: {
-            sendMpesaStkPush: jest.fn().mockResolvedValue({
-              id: '123456789',
-              invoice: {
-                invoice_id: '123456789',
-              },
-              refundable: false,
-            }),
-          },
+          useValue: mockIntasendService,
         },
         {
           provide: PrismaService,
@@ -136,7 +149,7 @@ describe('SwapController', () => {
         ref: 'test-onramp-swap',
       };
 
-      (mockCacheManager.get as jest.Mock).mockImplementation(
+      (mockCacheManager.getOrThrow as jest.Mock).mockImplementation(
         (key: string) => cache,
       );
 
@@ -167,7 +180,9 @@ describe('SwapController', () => {
           id: 'dadad-bdjada-dadad',
         }),
       ).rejects.toThrow('Swap not found in db or cache');
-      expect(mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow).toHaveBeenCalled();
+      expect(
+        mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow,
+      ).toHaveBeenCalled();
     });
 
     it('should look up swap in cache if swap is not in db', async () => {
@@ -180,7 +195,7 @@ describe('SwapController', () => {
         state: MpesaTractactionState.Pending,
       };
 
-      (mockCacheManager.get as jest.Mock).mockImplementation(
+      (mockCacheManager.getOrThrow as jest.Mock).mockImplementation(
         (_key: string) => cache,
       );
 
@@ -191,7 +206,20 @@ describe('SwapController', () => {
       expect(swap).toBeDefined();
       expect(swap.rate).toEqual(cache.rate);
       expect(swap.status).toEqual(SwapStatus.PENDING);
-      expect(mockCacheManager.get).toHaveBeenCalled();
+      expect(mockCacheManager.getOrThrow).toHaveBeenCalled();
     });
   });
+
+  // describe('processSwapUpdate', () => {
+  //   it('should update mpesa tx', async () => {
+  //     await swapController.processSwapUpdate({});
+  //     expect(mockIntasendService.updateMpesaTx).toHaveBeenCalled();
+  //   });
+
+  //   it('should lookup a swap in db', async () => {
+  //     expect(
+  //       mockPrismaService.mpesaOnrampSwap.findUniqueOrThrow,
+  //     ).toHaveBeenCalled();
+  //   });
+  // });
 });

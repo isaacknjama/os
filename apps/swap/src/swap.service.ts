@@ -12,6 +12,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
+import { SwapTransactionState } from '.prisma/client';
 import { IntasendService } from './intasend/intasend.service';
 import {
   CreateOnrampSwapDto,
@@ -55,7 +56,11 @@ export class SwapService {
         expiry: expiry.toString(),
       };
 
-      this.cacheManager.set(quote.id, quote, this.CACHE_TTL_SECS);
+      this.cacheManager.set<QuoteResponse>(
+        quote.id,
+        quote,
+        this.CACHE_TTL_SECS,
+      );
 
       return quote;
     } catch (error) {
@@ -71,7 +76,8 @@ export class SwapService {
     phone,
     lightning,
   }: CreateOnrampSwapDto): Promise<OnrampSwapResponse> {
-    let currentQuote = quote && this.cacheManager.get(quote.id);
+    let currentQuote: QuoteResponse | undefined =
+      quote && this.cacheManager.get<QuoteResponse>(quote.id);
 
     if (
       !currentQuote ||
@@ -86,7 +92,7 @@ export class SwapService {
       });
     }
 
-    const { id, state } = await this.intasendService.sendMpesaStkPush({
+    const mpesa = await this.intasendService.sendMpesaStkPush({
       amount: Number(amount),
       phone_number: phone,
       api_ref: ref,
@@ -94,72 +100,135 @@ export class SwapService {
 
     // We record stk push response to a temporary cache
     // so we can track status of the swap later
-    this.cacheManager.set(
-      id,
+    // NOTE: we use mpesa ids as cache keys
+    this.cacheManager.set<STKPushCache>(
+      mpesa.id,
       {
         lightning,
         phone,
         amount,
         rate: currentQuote.rate,
-        state,
+        state: mpesa.state,
         ref,
       },
       this.CACHE_TTL_SECS,
     );
 
+    const swap = await this.prismaService.mpesaOnrampSwap.create({
+      data: {
+        state: SwapTransactionState.PENDING,
+        userId: phone,
+        mpesaId: mpesa.id,
+        lightning,
+        rate: currentQuote.rate,
+        retryCount: 0,
+      },
+    });
+
     return {
-      id,
-      rate: currentQuote.rate,
-      status: SwapStatus.PENDING,
+      id: swap.id,
+      rate: swap.rate,
+      status: mapSwapTxStateToSwapStatus(swap.state),
     };
   }
 
   async findOnrampSwap({ id }: FindSwapDto): Promise<OnrampSwapResponse> {
-    let swap;
+    let resp: OnrampSwapResponse;
     try {
       // Look up swap in db
-      swap = await this.prismaService.mpesaOnrampSwap.findUniqueOrThrow({
+      const swap = await this.prismaService.mpesaOnrampSwap.findUniqueOrThrow({
         where: {
+          // is this mpesa id or swap id?
           id,
         },
       });
+
+      resp = {
+        id,
+        rate: swap.rate,
+        status: mapSwapTxStateToSwapStatus(swap.state),
+      };
     } catch (_error) {
       this.logger.warn(`Swap not found in DB : ${id}`);
     }
 
     try {
-      // Look up swap in cache
-      swap = await this.cacheManager.get(id);
+      // Look up stk push response in cache
+      // NOTE: we use mpesa ids as cache keys
+      const stk: STKPushCache =
+        await this.cacheManager.getOrThrow<STKPushCache>(id);
+
+      resp = {
+        id,
+        rate: stk.rate,
+        status: mapMpesaTxStateToSwapStatus(stk.state),
+      };
     } catch (_error) {
       this.logger.warn(`Swap not found in cache : ${id}`);
     }
 
-    if (!swap) {
+    if (!resp) {
       throw new Error('Swap not found in db or cache');
     }
 
-    return {
-      id,
-      rate: swap.rate,
-      status: mapMpesaTxStateToSwapStatus(swap.state),
-    };
+    return resp;
   }
 
   async processSwapUpdate(data: MpesaTransactionUpdateDto) {
-    // verify that swap is already recorded in DB
-    const swap = await this.prismaService.mpesaOnrampSwap.findUnique({
-      where: {
-        mpesaId: data.invoice_id,
-      },
+    // record mpesa transaction using intasend service
+    const mpesa = await this.intasendService.updateMpesaTx(data);
+
+    let swap;
+    try {
+      swap = await this.prismaService.mpesaOnrampSwap.findUniqueOrThrow({
+        where: {
+          mpesaId: data.invoice_id,
+        },
+      });
+    } catch {
+      // look up mpesa tx in cache
+      const stk = await this.cacheManager.getOrThrow(mpesa.id);
+
+      // record a new swap in db
+      swap = await this.prismaService.mpesaOnrampSwap.create({
+        data: {
+          state: SwapTransactionState.PENDING,
+          userId: stk.phone,
+          mpesaId: mpesa.id,
+          lightning: stk.lightning,
+          rate: stk.rate,
+          retryCount: 0,
+        },
+      });
+    }
+
+    if (!swap) {
+      throw new Error('Failed to create or update swap');
+    }
+
+    let updates: { state: SwapTransactionState };
+    switch (mpesa.state) {
+      case MpesaTractactionState.Complete:
+        // do the actual swap
+        // updates.state = await this.fedimintService.swap(swap);
+        break;
+      case MpesaTractactionState.Processing:
+        updates = { state: SwapTransactionState.PROCESSING };
+        break;
+      case MpesaTractactionState.Failed:
+        updates = { state: SwapTransactionState.FAILED };
+        break;
+      case MpesaTractactionState.Retry:
+        updates = { state: SwapTransactionState.RETRY };
+        break;
+    }
+
+    await this.prismaService.mpesaOnrampSwap.update({
+      where: { id: swap.id },
+      data: updates,
     });
 
-    // record mpesa transaction using intasend service
-    // check status:
-    //  - if status has progresed to complete, do the actual swap using fedimint service
-
-    this.logger.log('Processing Swap Update');
-    this.logger.log(data);
-
+    this.logger.log('Swap Updated');
     return;
   }
 }
@@ -176,4 +245,27 @@ function mapMpesaTxStateToSwapStatus(state: MpesaTractactionState): SwapStatus {
     case MpesaTractactionState.Processing:
       return SwapStatus.PROCESSING;
   }
+}
+
+function mapSwapTxStateToSwapStatus(state: SwapTransactionState): SwapStatus {
+  switch (state) {
+    case SwapTransactionState.PENDING:
+      return SwapStatus.PENDING;
+    case SwapTransactionState.FAILED:
+      return SwapStatus.FAILED;
+    case SwapTransactionState.COMPLETE:
+      return SwapStatus.COMPLETE;
+    case SwapTransactionState.RETRY:
+    case SwapTransactionState.PROCESSING:
+      return SwapStatus.PROCESSING;
+  }
+}
+
+interface STKPushCache {
+  lightning: string;
+  phone: string;
+  amount: string;
+  rate: string;
+  state: MpesaTractactionState;
+  ref: string;
 }

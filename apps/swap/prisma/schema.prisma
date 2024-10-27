@@ -20,6 +20,8 @@ model MpesaOnrampSwap {
   mpesaId   String @unique
   /// Lightning invoice to pay.
   lightning String
+  /// Fx Rate
+  rate      String
   /// Retry count tracker
   retryCount Int
   /// Timestamps

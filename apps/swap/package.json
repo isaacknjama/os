@@ -7,7 +7,8 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "migrate": "dotenv -e .env.local -- bun prisma migrate dev",
+    "migrate:dev": "dotenv -e .env.local -- bun prisma migrate dev",
+    "migrate:reset": "dotenv -e .env.local -- bun prisma migrate reset",
     "migrate:deploy": "bun prisma migrate deploy"
   },
   "dependencies": {

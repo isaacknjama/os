@@ -50,7 +50,6 @@ describe('EventsController', () => {
       failed_code: null,
     };
     await controller.handleSwapUpdate(data);
-
     expect(swapService.processSwapUpdate).toHaveBeenCalledWith(data);
   });
 });
