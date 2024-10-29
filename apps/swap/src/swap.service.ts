@@ -20,6 +20,7 @@ import {
   MpesaTransactionUpdateDto,
 } from './dto';
 import { MpesaTractactionState } from './intasend/intasend.types';
+import { FedimintService } from './fedimint/fedimint.service';
 
 @Injectable()
 export class SwapService {
@@ -29,6 +30,7 @@ export class SwapService {
   constructor(
     private readonly fxService: FxService,
     private readonly intasendService: IntasendService,
+    private readonly fedimintService: FedimintService,
     private readonly prismaService: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
@@ -209,8 +211,8 @@ export class SwapService {
     let updates: { state: SwapTransactionState };
     switch (mpesa.state) {
       case MpesaTractactionState.Complete:
-        // do the actual swap
-        // updates.state = await this.fedimintService.swap(swap);
+        const { state } = await this.fedimintService.swapToBtc(swap);
+        updates = { state };
         break;
       case MpesaTractactionState.Processing:
         updates = { state: SwapTransactionState.PROCESSING };
@@ -220,6 +222,9 @@ export class SwapService {
         break;
       case MpesaTractactionState.Retry:
         updates = { state: SwapTransactionState.RETRY };
+        break;
+      case MpesaTractactionState.Pending:
+        updates = { state: SwapTransactionState.PENDING };
         break;
     }
 

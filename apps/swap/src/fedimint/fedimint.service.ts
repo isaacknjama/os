@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { FedimintClient } from './fmts';
+import { MpesaOnrampSwap, SwapTransactionState } from '.prisma/client';
+import { FedimintClient, LightningPayResponse } from './fmts';
 
 @Injectable()
 export class FedimintService implements OnModuleInit {
@@ -33,5 +34,35 @@ export class FedimintService implements OnModuleInit {
     );
 
     this.logger.log('FedimintService initialized');
+  }
+
+  async swapToBtc(
+    swap: MpesaOnrampSwap,
+  ): Promise<{ state: SwapTransactionState; operationId: string }> {
+    this.logger.log('Swapping to BTC');
+
+    if (
+      swap.state === SwapTransactionState.COMPLETE ||
+      swap.state === SwapTransactionState.FAILED
+    ) {
+      throw new Error('Swap transaction alread finalized');
+    }
+
+    if (swap.state === SwapTransactionState.PROCESSING) {
+      this.logger.log(`Attempting to pay : ${swap.lightning}`);
+
+      const resp: LightningPayResponse = await this.fedimint.lightning.pay({
+        paymentInfo: swap.lightning,
+      });
+
+      this.logger.log('Lightning payment response', resp);
+
+      return {
+        state: SwapTransactionState.COMPLETE,
+        operationId: resp.operationId,
+      };
+    }
+
+    throw new Error('Attempted swap to btc while mpesa is still pending');
   }
 }
