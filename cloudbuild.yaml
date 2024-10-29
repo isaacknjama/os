@@ -1,0 +1,16 @@
+steps:
+  # Swap Service
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t',
+      'asia-south1-docker.pkg.dev/encoded-stage-439007-j5/swap/latest',
+      '-f',
+      'apps/swap/Dockerfile',
+      '.'
+    ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'asia-south1-docker.pkg.dev/encoded-stage-439007-j5/swap/latest'
+    ]
