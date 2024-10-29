@@ -14,3 +14,8 @@ steps:
       'push',
       'asia-south1-docker.pkg.dev/encoded-stage-439007-j5/swap/latest'
     ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+region: asia-south1
