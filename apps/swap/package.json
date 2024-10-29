@@ -11,11 +11,6 @@
     "migrate:reset": "dotenv -e .env.local -- bun prisma migrate reset",
     "migrate:deploy": "bun prisma migrate deploy"
   },
-  "dependencies": {
-    "@prisma/client": "^5.21.1",
-    "intasend-node": "^1.1.2",
-    "prisma": "^5.21.1"
-  },
   "devDependencies": {
     "dotenv-cli": "^7.4.2"
   }
