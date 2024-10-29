@@ -15,9 +15,9 @@ Run `bun start` to launch this plus any other microservice and the REST api gate
 
 ## Docs
 
-- See [swap.proto](../../proto/swap.proto)
+- See [swap.proto](https://github.com/bitsacco/os/blob/main/proto/swap.proto)
 - With the microservice running, see supported gRPC methods with type reflection at http://localhost:4040
 
 ## Architecture
 
-See [architecture.md](docs/architecture.md)
+See [architecture.md](https://github.com/bitsacco/os/blob/main/docs/architecture.md)
