@@ -35,4 +35,4 @@ COPY --from=development /usr/src/app/dist ./dist
 COPY --from=development /usr/src/app/proto ./proto
 COPY --from=development /usr/src/app/prisma ./prisma
 
-CMD ["sh", "-c", "bun prisma migrate deploy && bun dist/apps/swap/main.js"]
+CMD ["sh", "-c", "bun run prisma migrate deploy && bun run dist/apps/swap/main.js"]
