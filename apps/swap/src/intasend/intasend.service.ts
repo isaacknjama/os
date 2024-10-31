@@ -1,6 +1,6 @@
 import IntaSend = require('intasend-node');
 import { ConfigService } from '@nestjs/config';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MpesaTractactionState, MpesaTxTracker } from './intasend.types';
 import { MpesaTransactionUpdateDto, SendSTKPushDto } from '../dto';
 import { PrismaService } from '../prisma.service';
@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma.service';
 const INTASEND_MPESA_TX_UPDATE_CHALLENGE = 'BITSACCO';
 
 @Injectable()
-export class IntasendService implements OnModuleInit {
+export class IntasendService {
   private readonly logger = new Logger(IntasendService.name);
   private intasend: IntaSend;
 
@@ -17,9 +17,7 @@ export class IntasendService implements OnModuleInit {
     private readonly prismaService: PrismaService,
   ) {
     this.logger.log('IntasendService created');
-  }
 
-  onModuleInit() {
     const pubkey = this.configService.getOrThrow<string>('INTASEND_PUBLIC_KEY');
     const privkey = this.configService.getOrThrow<string>(
       'INTASEND_PRIVATE_KEY',
@@ -33,8 +31,13 @@ export class IntasendService implements OnModuleInit {
       this.logger.log('IntasendService running in production mode');
     }
 
-    this.intasend = new IntaSend(pubkey, privkey, test_mode);
-    this.logger.log('IntasendService initialized');
+    try {
+      this.intasend = new IntaSend(pubkey, privkey, test_mode);
+      this.logger.log('IntasendService initialized');
+    } catch (e) {
+      this.logger.error('IntasendService failed to initialize');
+      throw e;
+    }
   }
 
   async sendMpesaStkPush(payload: SendSTKPushDto): Promise<MpesaTxTracker> {
