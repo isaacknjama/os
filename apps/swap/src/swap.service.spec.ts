@@ -5,10 +5,10 @@ import {
   SwapStatus,
 } from '@bitsacco/common';
 import { TestingModule } from '@nestjs/testing';
+import { SwapTransactionState } from '../prisma/client';
+import { PrismaService } from './prisma.service';
 import { FxService } from './fx/fx.service';
 import { SwapService } from './swap.service';
-import { PrismaService } from './prisma.service';
-import { SwapTransactionState } from '.prisma/client';
 import { IntasendService } from './intasend/intasend.service';
 import { MpesaTractactionState } from './intasend/intasend.types';
 import { CreateOnrampSwapDto, MpesaTransactionUpdateDto } from './dto';
@@ -40,6 +40,7 @@ describe('SwapService', () => {
         create: jest.fn(),
         update: jest.fn(),
         findUniqueOrThrow: jest.fn(),
+        findMany: jest.fn(),
       },
     } as unknown as PrismaService;
 
@@ -380,6 +381,37 @@ describe('SwapService', () => {
           state: SwapTransactionState.COMPLETE,
         },
       });
+    });
+  });
+
+  describe('listSwaps', () => {
+    it('should return a paginated list of swaps', async () => {
+      (
+        mockPrismaService.mpesaOnrampSwap.findMany as jest.Mock
+      ).mockImplementation(() => {
+        return [
+          {
+            mpesaId: 'dadad-bdjada-dadad',
+            rate: mock_rate.toString(),
+            amount: '100',
+            state: SwapTransactionState.PENDING,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ];
+      });
+
+      const resp = await swapService.listSwaps({
+        page: 0,
+        size: 1,
+      });
+
+      expect(mockPrismaService.mpesaOnrampSwap.findMany).toHaveBeenCalled();
+      expect(resp).toBeDefined();
+      expect(resp.swaps).toHaveLength(1);
+      expect(resp.page).toEqual(0);
+      expect(resp.size).toEqual(1);
+      expect(resp.pages).toEqual(1);
     });
   });
 });

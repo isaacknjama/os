@@ -2,6 +2,8 @@ import {
   btcFromKes,
   Currency,
   OnrampSwapResponse,
+  PaginatedSwapResponse,
+  PaginatedRequest,
   QuoteRequest,
   QuoteResponse,
   SwapStatus,
@@ -174,6 +176,28 @@ export class SwapService {
     }
 
     return resp;
+  }
+
+  async listSwaps({
+    page,
+    size,
+  }: PaginatedRequest): Promise<PaginatedSwapResponse> {
+    const onramps = await this.prismaService.mpesaOnrampSwap.findMany();
+
+    const swaps = onramps
+      .slice(page * size, page * size + size)
+      .map((swap) => ({
+        id: swap.mpesaId,
+        rate: swap.rate,
+        status: mapSwapTxStateToSwapStatus(swap.state),
+      }));
+
+    return {
+      swaps,
+      page,
+      size,
+      pages: onramps.length / size,
+    };
   }
 
   async processSwapUpdate(data: MpesaTransactionUpdateDto) {

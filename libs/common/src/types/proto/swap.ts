@@ -116,6 +116,34 @@ export interface FindSwapRequest {
   id: string;
 }
 
+export interface PaginatedRequest {
+  /** Page offset to start from */
+  page: number;
+  /** Number of items to be return per page */
+  size: number;
+}
+
+export interface PaginatedSwapResponse {
+  /** List of onramp swaps */
+  swaps: SwapResponse[];
+  /** Current page offset */
+  page: number;
+  /** Number of items return per page */
+  size: number;
+  /** Number of pages given the current page size */
+  pages: number;
+}
+
+/** SwapResponse: Represents the response for an onramp swap. */
+export interface SwapResponse {
+  /** Unique identifier for the swap */
+  id: string;
+  /** Exchange rate used for the swap */
+  rate: string;
+  /** Current status of the swap */
+  status: SwapStatus;
+}
+
 export const SWAP_PACKAGE_NAME = 'swap';
 
 /** SwapService: Defines the main service for handling swap operations. */
@@ -132,6 +160,8 @@ export interface SwapServiceClient {
   /** FindOnrampSwap: Finds and returns a single onramp swap. */
 
   findOnrampSwap(request: FindSwapRequest): Observable<OnrampSwapResponse>;
+
+  listSwaps(request: PaginatedRequest): Observable<PaginatedSwapResponse>;
 }
 
 /** SwapService: Defines the main service for handling swap operations. */
@@ -160,6 +190,13 @@ export interface SwapServiceController {
     | Promise<OnrampSwapResponse>
     | Observable<OnrampSwapResponse>
     | OnrampSwapResponse;
+
+  listSwaps(
+    request: PaginatedRequest,
+  ):
+    | Promise<PaginatedSwapResponse>
+    | Observable<PaginatedSwapResponse>
+    | PaginatedSwapResponse;
 }
 
 export function SwapServiceControllerMethods() {
@@ -168,6 +205,7 @@ export function SwapServiceControllerMethods() {
       'getQuote',
       'createOnrampSwap',
       'findOnrampSwap',
+      'listSwaps',
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
