@@ -1,4 +1,5 @@
 import {
+  CreateOnrampSwapDto,
   Currency,
   OnrampSwapRequest,
   SWAP_SERVICE_NAME,
@@ -25,7 +26,7 @@ export class SwapService implements OnModuleInit {
     return this.client.getQuote(req);
   }
 
-  postOnrampTransaction(req: OnrampSwapRequest) {
+  postOnrampTransaction(req: CreateOnrampSwapDto) {
     return this.client.createOnrampSwap(req);
   }
 
@@ -50,10 +51,6 @@ export class SwapService implements OnModuleInit {
   }
 
   findOfframpTransaction() {
-    return { status: 200 };
-  }
-
-  postSwapUpdate() {
     return { status: 200 };
   }
 }

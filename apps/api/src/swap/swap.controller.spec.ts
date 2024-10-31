@@ -56,7 +56,9 @@ describe('SwapController', () => {
     });
 
     // it('throws if unsupported currency is supplied', () => {
-    //   expect(controller.getOnrampQuote(SupportedCurrencies.BTC)).rejects.toThrow();
+    //   expect(
+    //     controller.getOnrampQuote(SupportedCurrencies.BTC),
+    //   ).rejects.toThrow();
     // });
 
     // it('throws BadRequestException if unsupported currency is supplied', async () => {
@@ -66,7 +68,14 @@ describe('SwapController', () => {
 
   describe('postOnrampTransaction', () => {
     it('should call swapService.postOnrampTransaction', () => {
-      controller.postOnrampTransaction();
+      const req = {
+        quote: undefined,
+        ref: 'ref',
+        amount: '100',
+        phone: '07000000000',
+        lightning: 'lnbc1000u1p0j7j0pp5',
+      };
+      controller.postOnrampTransaction(req);
       expect(swapService.postOnrampTransaction).toHaveBeenCalled();
     });
   });

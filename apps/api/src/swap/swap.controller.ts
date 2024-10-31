@@ -16,9 +16,9 @@ import {
   SupportedCurrencies,
   process_swap_update,
   EVENTS_SERVICE_BUS,
+  CreateOnrampSwapDto,
 } from '@bitsacco/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { SwapService } from './swap.service';
 
 @Controller('swap')
 export class SwapController {
@@ -54,8 +54,20 @@ export class SwapController {
   }
 
   @Post('onramp')
-  postOnrampTransaction() {
-    return this.swapService.postOnrampTransaction();
+  @ApiOperation({ summary: 'Post onramp transaction' })
+  @ApiBody({
+    type: CreateOnrampSwapDto,
+  })
+  postOnrampTransaction(
+    @Body() { quote, ref, amount, phone, lightning }: CreateOnrampSwapDto,
+  ) {
+    return this.swapService.postOnrampTransaction({
+      quote,
+      ref,
+      amount,
+      phone,
+      lightning,
+    });
   }
 
   @Get('onramp/all')

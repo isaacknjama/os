@@ -90,18 +90,21 @@ describe('SwapService', () => {
         amount: '1',
       });
       expect(quote).toBeDefined();
+      expect(mockSwapServiceClient.getQuote).toHaveBeenCalled();
     });
   });
 
   describe('postOnrampTransaction', () => {
     it('can initiate an onramp swap without a quote', () => {
       const swap = swapService.postOnrampTransaction({
+        quote: undefined,
         ref: '1234',
         amount: '100',
         phone: '0700000000',
         lightning: 'lnbc1000u1p0j7j0pp5',
       });
       expect(swap).toBeDefined();
+      expect(mockSwapServiceClient.createOnrampSwap).toHaveBeenCalled();
     });
 
     it('can initiate an onramp swap with a quote', () => {
@@ -116,6 +119,7 @@ describe('SwapService', () => {
         },
       });
       expect(swap).toBeDefined();
+      expect(mockSwapServiceClient.createOnrampSwap).toHaveBeenCalled();
     });
 
     describe('getOnrampTransactions', () => {
