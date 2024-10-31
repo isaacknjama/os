@@ -5,10 +5,12 @@ import {
   Get,
   Inject,
   Logger,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
-import { SwapService } from './swap.service';
+import { ClientProxy } from '@nestjs/microservices';
+import { ApiBody, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import {
   Currency,
   mapToCurrency,
@@ -76,8 +78,10 @@ export class SwapController {
   }
 
   @Get('onramp/find/:id')
-  findOnrampTransaction() {
-    return this.swapService.findOnrampTransaction();
+  @ApiOperation({ summary: 'Find onramp transaction by ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Transaction ID' })
+  findOnrampTransaction(@Param('id') id: string) {
+    return this.swapService.findOnrampTransaction({ id });
   }
 
   @Get('offramp/quote')

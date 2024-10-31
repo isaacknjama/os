@@ -89,7 +89,7 @@ describe('SwapController', () => {
 
   describe('findOnrampTransaction', () => {
     it('should call swapService.findOnrampTransaction', () => {
-      controller.findOnrampTransaction();
+      controller.findOnrampTransaction('swap_id');
       expect(swapService.findOnrampTransaction).toHaveBeenCalled();
     });
   });

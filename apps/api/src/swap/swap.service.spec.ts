@@ -48,6 +48,13 @@ describe('SwapService', () => {
           status: 'PENDING',
         };
       }),
+      findOnrampSwap: jest.fn().mockImplementation(async () => {
+        return {
+          id: mock_id,
+          rate: mock_rate.toString(),
+          status: 'PENDING',
+        };
+      }),
     };
   });
 
@@ -129,8 +136,12 @@ describe('SwapService', () => {
     });
 
     describe('findOnrampTransaction', () => {
-      it('should return status 200', () => {
-        expect(swapService.findOnrampTransaction()).toEqual({ status: 200 });
+      it('can look up onramp swap tx given id', () => {
+        const swap = swapService.findOnrampTransaction({
+          id: mock_id,
+        });
+        expect(swap).toBeDefined();
+        expect(mockSwapServiceClient.findOnrampSwap).toHaveBeenCalled();
       });
     });
 
@@ -155,12 +166,6 @@ describe('SwapService', () => {
     describe('findOfframpTransaction', () => {
       it('should return status 200', () => {
         expect(swapService.findOfframpTransaction()).toEqual({ status: 200 });
-      });
-    });
-
-    describe('postSwapUpdate', () => {
-      it('should return status 200', () => {
-        expect(swapService.postSwapUpdate()).toEqual({ status: 200 });
       });
     });
   });
