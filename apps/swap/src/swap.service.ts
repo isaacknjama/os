@@ -7,6 +7,8 @@ import {
   QuoteRequest,
   QuoteResponse,
   SwapStatus,
+  CreateOnrampSwapDto,
+  FindSwapDto,
 } from '@bitsacco/common';
 import { v4 as uuidv4 } from 'uuid';
 import type { Cache } from 'cache-manager';
@@ -16,11 +18,7 @@ import { SwapTransactionState } from '../prisma/client';
 import { FxService } from './fx/fx.service';
 import { PrismaService } from './prisma.service';
 import { IntasendService } from './intasend/intasend.service';
-import {
-  CreateOnrampSwapDto,
-  FindSwapDto,
-  MpesaTransactionUpdateDto,
-} from './dto';
+import { MpesaTransactionUpdateDto } from './dto';
 import { MpesaTractactionState } from './intasend/intasend.types';
 import { FedimintService } from './fedimint/fedimint.service';
 

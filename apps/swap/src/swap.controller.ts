@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import {
+  CreateOnrampSwapDto,
   type FindSwapRequest,
   type PaginatedRequest,
   type QuoteRequest,
@@ -8,7 +9,6 @@ import {
   SwapServiceControllerMethods,
 } from '@bitsacco/common';
 import { SwapService } from './swap.service';
-import { CreateOnrampSwapDto } from './dto';
 
 @Controller()
 @SwapServiceControllerMethods()
