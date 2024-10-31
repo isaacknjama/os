@@ -181,9 +181,13 @@ export class SwapService {
     size,
   }: PaginatedRequest): Promise<PaginatedSwapResponse> {
     const onramps = await this.prismaService.mpesaOnrampSwap.findMany();
+    const pages = Math.ceil(onramps.length / size);
+
+    // select the last page if requested page exceeds total pages possible
+    const selectPage = page > pages ? pages - 1 : page;
 
     const swaps = onramps
-      .slice(page * size, page * size + size)
+      .slice(selectPage * size, (selectPage + 1) * size + size)
       .map((swap) => ({
         id: swap.mpesaId,
         rate: swap.rate,
@@ -192,9 +196,9 @@ export class SwapService {
 
     return {
       swaps,
-      page,
+      page: selectPage,
       size,
-      pages: onramps.length / size,
+      pages,
     };
   }
 

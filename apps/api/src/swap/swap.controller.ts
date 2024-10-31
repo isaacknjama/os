@@ -19,6 +19,7 @@ import {
   process_swap_update,
   EVENTS_SERVICE_BUS,
   CreateOnrampSwapDto,
+  ListSwapsDto,
 } from '@bitsacco/common';
 import { SwapService } from './swap.service';
 
@@ -72,16 +73,35 @@ export class SwapController {
     });
   }
 
-  @Get('onramp/all')
-  getOnrampTransactions() {
-    return this.swapService.getOnrampTransactions();
-  }
-
   @Get('onramp/find/:id')
   @ApiOperation({ summary: 'Find onramp transaction by ID' })
   @ApiParam({ name: 'id', type: 'string', description: 'Transaction ID' })
   findOnrampTransaction(@Param('id') id: string) {
     return this.swapService.findOnrampTransaction({ id });
+  }
+
+  @Get('onramp/all')
+  @ApiOperation({ summary: 'List onramp swaps' })
+  @ApiQuery({
+    name: 'page',
+    example: '?page=0',
+    type: ListSwapsDto['page'],
+    required: false,
+  })
+  @ApiQuery({
+    name: 'size',
+    example: '?size=100',
+    type: ListSwapsDto['size'],
+    required: false,
+  })
+  getOnrampTransactions(
+    @Query('page') page: number = 0,
+    @Query('size') size: number = 100,
+  ) {
+    return this.swapService.getOnrampTransactions({
+      page,
+      size,
+    });
   }
 
   @Get('offramp/quote')
