@@ -1,5 +1,6 @@
 import {
   Currency,
+  OnrampSwapRequest,
   SWAP_SERVICE_NAME,
   SwapServiceClient,
 } from '@bitsacco/common';
@@ -24,8 +25,8 @@ export class SwapService implements OnModuleInit {
     return this.client.getQuote(req);
   }
 
-  postOnrampTransaction() {
-    return { status: 200 };
+  postOnrampTransaction(req: OnrampSwapRequest) {
+    return this.client.createOnrampSwap(req);
   }
 
   getOnrampTransactions() {

@@ -13,16 +13,16 @@ import {
 import { SwapService } from './swap.service';
 
 describe('SwapService', () => {
-  let service: SwapService;
-  let mockClientGrpc: ClientGrpc;
-  let mockSSC: Partial<SwapServiceClient>;
+  let swapService: SwapService;
+  let serviceGenerator: ClientGrpc;
+  let mockSwapServiceClient: Partial<SwapServiceClient>;
 
   const mock_id = '6f7f6d3f-c54e-4a34-a80d-a9e3c023abf3';
   const mock_rate = 8708520.117232416; // BTC to KES
 
   beforeAll(() => {
     // gRpc client that actually talks to the microservice
-    mockSSC = {
+    mockSwapServiceClient = {
       // Add any methods from SwapServiceClient that you need to mock
       getQuote: jest
         .fn()
@@ -41,13 +41,20 @@ describe('SwapService', () => {
             };
           },
         ),
+      createOnrampSwap: jest.fn().mockImplementation(async () => {
+        return {
+          id: mock_id,
+          rate: mock_rate.toString(),
+          status: 'PENDING',
+        };
+      }),
     };
   });
 
   beforeEach(async () => {
-    mockClientGrpc = {
-      getService: jest.fn().mockReturnValue(mockSSC),
-      getClientByServiceName: jest.fn().mockReturnValue(mockSSC),
+    serviceGenerator = {
+      getService: jest.fn().mockReturnValue(mockSwapServiceClient),
+      getClientByServiceName: jest.fn().mockReturnValue(mockSwapServiceClient),
     };
 
     const module: TestingModule = await createTestingModuleWithValidation({
@@ -56,28 +63,28 @@ describe('SwapService', () => {
         {
           provide: SwapService,
           useFactory: () => {
-            const real = new SwapService(mockClientGrpc);
+            const real = new SwapService(serviceGenerator);
             real.onModuleInit();
             return real;
           },
         },
         {
           provide: SWAP_SERVICE_NAME,
-          useValue: mockClientGrpc,
+          useValue: serviceGenerator,
         },
       ],
     });
 
-    service = module.get<SwapService>(SwapService);
+    swapService = module.get<SwapService>(SwapService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(swapService).toBeDefined();
   });
 
   describe('getOnrampQuote', () => {
-    it('should return a valid quote', () => {
-      const quote = service.getOnrampQuote({
+    it('can request quote', () => {
+      const quote = swapService.getOnrampQuote({
         from: Currency.KES,
         to: Currency.BTC,
         amount: '1',
@@ -87,50 +94,70 @@ describe('SwapService', () => {
   });
 
   describe('postOnrampTransaction', () => {
-    it('should return status 200', () => {
-      expect(service.postOnrampTransaction()).toEqual({ status: 200 });
+    it('can initiate an onramp swap without a quote', () => {
+      const swap = swapService.postOnrampTransaction({
+        ref: '1234',
+        amount: '100',
+        phone: '0700000000',
+        lightning: 'lnbc1000u1p0j7j0pp5',
+      });
+      expect(swap).toBeDefined();
     });
-  });
 
-  describe('getOnrampTransactions', () => {
-    it('should return status 200', () => {
-      expect(service.getOnrampTransactions()).toEqual({ status: 200 });
+    it('can initiate an onramp swap with a quote', () => {
+      const swap = swapService.postOnrampTransaction({
+        ref: '1234',
+        amount: '100',
+        phone: '0700000000',
+        lightning: 'lnbc1000u1p0j7j0pp5',
+        quote: {
+          id: mock_id,
+          refreshIfExpired: true,
+        },
+      });
+      expect(swap).toBeDefined();
     });
-  });
 
-  describe('findOnrampTransaction', () => {
-    it('should return status 200', () => {
-      expect(service.findOnrampTransaction()).toEqual({ status: 200 });
+    describe('getOnrampTransactions', () => {
+      it('should return status 200', () => {
+        expect(swapService.getOnrampTransactions()).toEqual({ status: 200 });
+      });
     });
-  });
 
-  describe('getOfframpQuote', () => {
-    it('should return status 200', () => {
-      expect(service.getOfframpQuote()).toEqual({ status: 200 });
+    describe('findOnrampTransaction', () => {
+      it('should return status 200', () => {
+        expect(swapService.findOnrampTransaction()).toEqual({ status: 200 });
+      });
     });
-  });
 
-  describe('postOfframpTransaction', () => {
-    it('should return status 200', () => {
-      expect(service.postOfframpTransaction()).toEqual({ status: 200 });
+    describe('getOfframpQuote', () => {
+      it('should return status 200', () => {
+        expect(swapService.getOfframpQuote()).toEqual({ status: 200 });
+      });
     });
-  });
 
-  describe('getOfframpTransactions', () => {
-    it('should return status 200', () => {
-      expect(service.getOfframpTransactions()).toEqual({ status: 200 });
+    describe('postOfframpTransaction', () => {
+      it('should return status 200', () => {
+        expect(swapService.postOfframpTransaction()).toEqual({ status: 200 });
+      });
     });
-  });
 
-  describe('findOfframpTransaction', () => {
-    it('should return status 200', () => {
-      expect(service.findOfframpTransaction()).toEqual({ status: 200 });
+    describe('getOfframpTransactions', () => {
+      it('should return status 200', () => {
+        expect(swapService.getOfframpTransactions()).toEqual({ status: 200 });
+      });
     });
-  });
 
-  describe('postSwapUpdate', () => {
-    it('should return status 200', () => {
-      expect(service.postSwapUpdate()).toEqual({ status: 200 });
+    describe('findOfframpTransaction', () => {
+      it('should return status 200', () => {
+        expect(swapService.findOfframpTransaction()).toEqual({ status: 200 });
+      });
+    });
+
+    describe('postSwapUpdate', () => {
+      it('should return status 200', () => {
+        expect(swapService.postSwapUpdate()).toEqual({ status: 200 });
+      });
     });
   });
 });
