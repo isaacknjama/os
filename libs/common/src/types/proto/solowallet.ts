@@ -7,6 +7,7 @@
 /* eslint-disable */
 import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
+import { TransactionStatus } from './lib';
 import { OnrampSwapRequest } from './swap';
 
 export interface DepositFundsRequest {
@@ -14,21 +15,30 @@ export interface DepositFundsRequest {
   fiatDeposit?: OnrampSwapRequest | undefined;
 }
 
-export interface WalletDetailsResonse {
+export interface SolowalletDepositTransaction {
+  id: string;
   userId: string;
+  status: TransactionStatus;
+  amountMsats: number;
+  amountFiat?: number | undefined;
+  reference: string;
+  createdAt: string;
+  updatedAt?: string | undefined;
 }
 
 export interface SolowalletServiceClient {
-  depositFunds(request: DepositFundsRequest): Observable<WalletDetailsResonse>;
+  depositFunds(
+    request: DepositFundsRequest,
+  ): Observable<SolowalletDepositTransaction>;
 }
 
 export interface SolowalletServiceController {
   depositFunds(
     request: DepositFundsRequest,
   ):
-    | Promise<WalletDetailsResonse>
-    | Observable<WalletDetailsResonse>
-    | WalletDetailsResonse;
+    | Promise<SolowalletDepositTransaction>
+    | Observable<SolowalletDepositTransaction>
+    | SolowalletDepositTransaction;
 }
 
 export function SolowalletServiceControllerMethods() {
