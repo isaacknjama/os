@@ -38,9 +38,16 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     update: UpdateQuery<TDocument>,
   ): Promise<TDocument> {
     const document = await this.model
-      .findOneAndUpdate(filterQuery, update, {
-        new: true,
-      })
+      .findOneAndUpdate(
+        filterQuery,
+        {
+          ...update,
+          updatedAt: Date.now(),
+        },
+        {
+          new: true,
+        },
+      )
       .lean<TDocument>(true);
 
     if (!document) {
