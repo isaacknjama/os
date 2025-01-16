@@ -140,7 +140,6 @@ export class SharesService {
         status: status !== undefined ? status : originShares.status,
         transfer: transfer ?? originShares.transfer,
         offerId: offerId ?? originShares.offerId,
-        updatedAt: Date.now(),
       },
     );
 
