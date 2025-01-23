@@ -204,7 +204,7 @@ export class SolowalletService {
     const selectPage = page > pages ? pages - 1 : page;
 
     const transactions = allTx
-      .slice(selectPage * size, (selectPage + 1) * size + size)
+      .slice(selectPage * size, (selectPage + 1) * size)
       .map((tx) => {
         let lightning: FmInvoice;
         try {

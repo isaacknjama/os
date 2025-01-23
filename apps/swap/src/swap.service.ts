@@ -216,7 +216,7 @@ export class SwapService {
     const selectPage = page > pages ? pages - 1 : page;
 
     const swaps = onramps
-      .slice(selectPage * size, (selectPage + 1) * size + size)
+      .slice(selectPage * size, (selectPage + 1) * size)
       .map((swap) => ({
         ...swap,
         id: swap._id.toString(),
