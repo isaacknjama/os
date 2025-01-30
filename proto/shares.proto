@@ -120,6 +120,7 @@ message SharesTxUpdates {
 
 message UserSharesTxsRequest {
   string user_id = 1;
+  lib.PaginatedRequest pagination = 2;
 }
 
 message UserShareTxsResponse {
@@ -130,7 +131,7 @@ message UserShareTxsResponse {
 }
 
 message AllSharesTxsResponse {
-  repeated SharesTx shares = 1;
+  PaginatedUserSharesTxsResponse shares = 1;
   AllSharesOffers offers = 2;
 }
 
@@ -139,7 +140,7 @@ message FindShareTxRequest {
 }
 
 message PaginatedUserSharesTxsResponse {
-  repeated SharesTx shares = 1;
+  repeated SharesTx transactions = 1;
   int32 page = 2;
   int32 size = 3;
   int32 pages = 4;

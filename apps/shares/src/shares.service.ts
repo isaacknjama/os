@@ -4,6 +4,8 @@ import {
   AllSharesTxsResponse,
   FindSharesTxDto,
   OfferSharesDto,
+  PaginatedRequestDto,
+  PaginatedUserSharesTxsResponse,
   SharesOffer,
   SharesTx,
   SharesTxStatus,
@@ -86,7 +88,19 @@ export class SharesService {
       status: SharesTxStatus.PROPOSED,
     });
 
-    return this.userSharesTransactions({ userId });
+    const sharesTransactions = await this.getPaginatedShareTx(
+      { userId },
+      { page: 0, size: 10 },
+    );
+
+    const offers = await this.getSharesOffers();
+
+    return {
+      userId,
+      shareHoldings: quantity,
+      shares: sharesTransactions,
+      offers,
+    };
   }
 
   async transferShares({
@@ -121,7 +135,10 @@ export class SharesService {
       transfer,
     });
 
-    return this.userSharesTransactions({ userId: transfer.fromUserId });
+    return this.userSharesTransactions({
+      userId: transfer.fromUserId,
+      pagination: { page: 0, size: 10 },
+    });
   }
 
   async updateShares({
@@ -133,7 +150,7 @@ export class SharesService {
 
     this.logger.log(`Updates : ${JSON.stringify(updates)}`);
 
-    let { userId } = await this.shares.findOneAndUpdate(
+    const { userId } = await this.shares.findOneAndUpdate(
       { _id: sharesId },
       {
         quantity: quantity !== undefined ? quantity : originShares.quantity,
@@ -143,15 +160,33 @@ export class SharesService {
       },
     );
 
-    return this.userSharesTransactions({ userId });
+    const txShares = await this.getPaginatedShareTx(
+      { userId },
+      { page: 0, size: 10 },
+    );
+
+    const offers = await this.getSharesOffers();
+
+    this.logger.log(`Share offers: ${JSON.stringify(offers)}`);
+
+    return {
+      userId,
+      shareHoldings: quantity,
+      shares: txShares,
+      offers,
+    };
   }
 
   async userSharesTransactions({
     userId,
+    pagination,
   }: UserSharesDto): Promise<UserShareTxsResponse> {
     const shares = (await this.shares.find({ userId }, { createdAt: -1 })).map(
       toSharesTx,
+      pagination,
     );
+
+    this.logger.log(`Shares: ${JSON.stringify(shares)}`);
 
     const shareHoldings = shares
       .filter((share) => {
@@ -162,20 +197,22 @@ export class SharesService {
       })
       .reduce((sum, share) => sum + share.quantity, 0);
 
+    const txShares = await this.getPaginatedShareTx({ userId }, pagination);
+
+    this.logger.log(`Tx shares: ${JSON.stringify(txShares)}`);
+
     const offers = await this.getSharesOffers();
 
     return {
       userId,
       shareHoldings,
-      shares,
+      shares: txShares,
       offers,
     };
   }
 
   async allSharesTransactions(): Promise<AllSharesTxsResponse> {
-    const shares = (await this.shares.find({}, { createdAt: -1 })).map(
-      toSharesTx,
-    );
+    const shares = await this.getPaginatedShareTx({}, { page: 0, size: 10 });
 
     const offers = await this.getSharesOffers();
 
@@ -190,10 +227,54 @@ export class SharesService {
   }: FindSharesTxDto): Promise<SharesTx> {
     const shares = toSharesTx(await this.shares.findOne({ _id: sharesId }));
 
+    this.logger.log(`shares: ${JSON.stringify(shares)}`);
+
     if (!shares) {
       throw new Error('Shares transaction not found');
     }
 
     return shares;
+  }
+
+  private async getPaginatedShareTx(
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    query: { userId: string } | {},
+    pagination: PaginatedRequestDto,
+  ): Promise<PaginatedUserSharesTxsResponse> {
+    const allShareTx = await this.shares.find(query, { createdAt: -1 });
+
+    const { page, size } = pagination;
+    const pages = Math.ceil(allShareTx.length / size);
+
+    const selectPage = page > pages ? pages - 1 : page;
+
+    const transactions = allShareTx
+      .slice(selectPage * size, (selectPage + 1) * size)
+      .map((tx) => {
+        let status = SharesTxStatus.UNRECOGNIZED;
+        try {
+          status = Number(tx.status) as SharesTxStatus;
+        } catch (error) {
+          this.logger.warn('Error parsing transaction type', error);
+        }
+
+        return {
+          ...tx,
+          id: tx._id,
+          userId: tx.userId,
+          offerId: tx.offerId,
+          quantity: tx.quantity,
+          status,
+          createdAt: tx.createdAt.toDateString(),
+          updatedAt: tx.updatedAt.toDateString(),
+        };
+      });
+
+    return {
+      transactions,
+      page: selectPage,
+      size,
+      pages,
+    };
   }
 }

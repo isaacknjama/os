@@ -108,7 +108,7 @@ export interface UserShareTxsResponse {
 }
 
 export interface AllSharesTxsResponse {
-  shares: SharesTx[];
+  shares: PaginatedUserSharesTxsResponse | undefined;
   offers: AllSharesOffers | undefined;
 }
 
