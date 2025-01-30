@@ -125,7 +125,7 @@ message UserSharesTxsRequest {
 message UserShareTxsResponse {
   string user_id = 1;
   int32 share_holdings = 2;
-  repeated SharesTx shares = 3;
+  PaginatedUserSharesTxsResponse shares = 3;
   AllSharesOffers offers = 4;
 }
 
@@ -136,4 +136,11 @@ message AllSharesTxsResponse {
 
 message FindShareTxRequest {
   string shares_id = 1;
-}   
+}
+
+message PaginatedUserSharesTxsResponse {
+  repeated SharesTx shares = 1;
+  int32 page = 2;
+  int32 size = 3;
+  int32 pages = 4;
+}
