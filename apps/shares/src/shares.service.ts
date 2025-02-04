@@ -183,10 +183,9 @@ export class SharesService {
     userId,
     pagination,
   }: UserSharesDto): Promise<UserShareTxsResponse> {
-    const shares = (await this.shares.find({ userId }, { createdAt: -1 })).map(
-      toSharesTx,
-      pagination,
-    );
+    const shares = (
+      await this.shares.find({ userId, ...STATUS_FILTER }, { createdAt: -1 })
+    ).map(toSharesTx, pagination);
 
     this.logger.log(`Shares: ${JSON.stringify(shares)}`);
 
@@ -245,7 +244,10 @@ export class SharesService {
     query: { userId: string } | null,
     pagination: PaginatedRequestDto,
   ): Promise<PaginatedUserSharesTxsResponse> {
-    const allShareTx = await this.shares.find(query || {}, { createdAt: -1 });
+    const allShareTx = await this.shares.find(
+      { ...(query || {}), ...STATUS_FILTER },
+      { createdAt: -1 },
+    );
 
     const { page, size } = pagination;
     const pages = Math.ceil(allShareTx.length / size);
@@ -282,3 +284,7 @@ export class SharesService {
     };
   }
 }
+
+const STATUS_FILTER = {
+  status: { $ne: SharesTxStatus.UNRECOGNIZED },
+};
