@@ -50,6 +50,12 @@ export class DepositFundsRequestDto implements DepositFundsRequest {
   @Type(() => OnrampSwapSourceDto)
   @ApiProperty({ type: OnrampSwapSourceDto })
   onramp?: OnrampSwapSourceDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PaginatedRequestDto)
+  @ApiProperty({ type: PaginatedRequestDto })
+  pagination?: PaginatedRequestDto;
 }
 
 export class WithdrawFundsRequestDto implements WithdrawFundsRequest {
@@ -80,6 +86,12 @@ export class WithdrawFundsRequestDto implements WithdrawFundsRequest {
   @Type(() => Bolt11InvoiceDto)
   @ApiProperty({ type: Bolt11InvoiceDto })
   lightning?: Bolt11InvoiceDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PaginatedRequestDto)
+  @ApiProperty({ type: PaginatedRequestDto })
+  pagination?: PaginatedRequestDto;
 }
 
 export class UserTxsRequestDto implements UserTxsRequest {
@@ -89,10 +101,11 @@ export class UserTxsRequestDto implements UserTxsRequest {
   @ApiProperty({ example: '7b158dfd-cb98-40b1-9ed2-a13006a9f670' })
   userId: string;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => PaginatedRequestDto)
   @ApiProperty({ type: PaginatedRequestDto })
-  pagination: PaginatedRequestDto;
+  pagination?: PaginatedRequestDto;
 }
 
 class SolowalletTxUpdatesDto implements SolowalletTxUpdates {
@@ -126,6 +139,12 @@ export class UpdateTxDto implements UpdateTxRequest {
   @Type(() => SolowalletTxUpdatesDto)
   @ApiProperty({ type: SolowalletTxUpdatesDto })
   updates: SolowalletTxUpdatesDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PaginatedRequestDto)
+  @ApiProperty({ type: PaginatedRequestDto })
+  pagination?: PaginatedRequestDto;
 }
 
 export class ContinueTxRequestDto implements ContinueTxRequest {
@@ -151,6 +170,12 @@ export class ContinueTxRequestDto implements ContinueTxRequest {
   @Type(() => OnrampSwapSourceDto)
   @ApiProperty({ type: OnrampSwapSourceDto })
   onramp?: OnrampSwapSourceDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PaginatedRequestDto)
+  @ApiProperty({ type: PaginatedRequestDto })
+  pagination?: PaginatedRequestDto;
 }
 
 export class FindTxRequestDto implements FindTxRequest {

@@ -286,6 +286,7 @@ export class SolowalletService {
     amountFiat,
     reference,
     onramp,
+    pagination,
   }: DepositFundsRequestDto): Promise<UserTxsResponse> {
     const { quote, amountMsats } = await this.getQuote({
       from: onramp?.currency || Currency.KES,
@@ -332,7 +333,7 @@ export class SolowalletService {
 
     const ledger = await this.getPaginatedUserTxLedger({
       userId,
-      pagination: { page: default_page, size: default_page_size },
+      pagination: pagination || { page: default_page, size: default_page_size },
       priority: deposit._id,
     });
 
@@ -352,7 +353,7 @@ export class SolowalletService {
   }: UserTxsRequestDto): Promise<UserTxsResponse> {
     const ledger = await this.getPaginatedUserTxLedger({
       userId,
-      pagination,
+      pagination: pagination || { page: default_page, size: default_page_size },
     });
     const meta = await this.getWalletMeta(userId);
 
@@ -374,6 +375,7 @@ export class SolowalletService {
     reference,
     offramp,
     lightning,
+    pagination,
   }: WithdrawFundsRequestDto): Promise<UserTxsResponse> {
     const { quote, amountMsats } = await this.getQuote({
       from: Currency.BTC,
@@ -446,7 +448,7 @@ export class SolowalletService {
 
     const ledger = await this.getPaginatedUserTxLedger({
       userId,
-      pagination: { page: default_page, size: default_page_size },
+      pagination: pagination || { page: default_page, size: default_page_size },
       priority: withdrawal._id,
     });
     const meta = await this.getWalletMeta(userId);
@@ -459,7 +461,7 @@ export class SolowalletService {
     };
   }
 
-  async updateTransaction({ txId, updates }: UpdateTxDto) {
+  async updateTransaction({ txId, updates, pagination }: UpdateTxDto) {
     const originTx = await this.wallet.findOne({ _id: txId });
     const { status, lightning, reference } = updates;
 
@@ -474,7 +476,7 @@ export class SolowalletService {
 
     const ledger = await this.getPaginatedUserTxLedger({
       userId,
-      pagination: { page: default_page, size: default_page_size },
+      pagination: pagination || { page: default_page, size: default_page_size },
       priority: originTx._id,
     });
     const meta = await this.getWalletMeta(userId);
@@ -492,6 +494,7 @@ export class SolowalletService {
     txId,
     amountFiat,
     onramp,
+    pagination,
   }: ContinueTxRequestDto): Promise<UserTxsResponse> {
     const tx = await this.wallet.findOne({ _id: txId });
 
@@ -554,7 +557,7 @@ export class SolowalletService {
 
     const ledger = await this.getPaginatedUserTxLedger({
       userId,
-      pagination: { page: default_page, size: default_page_size },
+      pagination: pagination || { page: default_page, size: default_page_size },
       priority: deposit._id,
     });
 

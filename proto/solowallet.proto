@@ -27,9 +27,12 @@ message DepositFundsRequest {
 
   string reference = 3;
 
-  optional swap.OnrampSwapSource onramp = 5;
+  optional swap.OnrampSwapSource onramp = 4;
 
   // Add more optional funding sources, like direct lightning deposit
+  reserved 5,6,7,8,9,10;
+
+  optional lib.PaginatedRequest pagination = 11;
 }
 
 message WithdrawFundsRequest {
@@ -44,11 +47,16 @@ message WithdrawFundsRequest {
   optional lightning.Bolt11 lightning = 5;
 
   // Add more optional withdrawal targets, like bolt12 or lnurl address
+
+  reserved 6,7,8,9,10;
+
+  optional lib.PaginatedRequest pagination = 11;
 }
 
 message UserTxsRequest {
   string user_id = 1;
-  lib.PaginatedRequest pagination = 2;
+  reserved 2,3,4,5,6,7,8,9,10;
+  optional lib.PaginatedRequest pagination = 11;
 }
 
 message UserTxsResponse {
@@ -107,6 +115,10 @@ message WalletMeta {
 message UpdateTxRequest {
   string tx_id = 1;
   SolowalletTxUpdates updates = 2;
+
+  reserved 3,4,5,6,7,8,9,10;
+
+  optional lib.PaginatedRequest pagination = 11;
 }
 
 message SolowalletTxUpdates {
@@ -122,7 +134,11 @@ message ContinueTxRequest {
 
   int32 amount_fiat = 3;
 
-  optional swap.OnrampSwapSource onramp = 5;
+  optional swap.OnrampSwapSource onramp = 4;
+
+  reserved 5,6,7,8,9,10;
+
+  optional lib.PaginatedRequest pagination = 11;
 }
 
 message FindTxRequest {
