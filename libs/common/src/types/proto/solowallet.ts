@@ -22,6 +22,7 @@ export interface DepositFundsRequest {
   amountFiat: number;
   reference: string;
   onramp?: OnrampSwapSource | undefined;
+  pagination?: PaginatedRequest | undefined;
 }
 
 export interface WithdrawFundsRequest {
@@ -30,11 +31,12 @@ export interface WithdrawFundsRequest {
   reference: string;
   offramp?: OfframpSwapTarget | undefined;
   lightning?: Bolt11 | undefined;
+  pagination?: PaginatedRequest | undefined;
 }
 
 export interface UserTxsRequest {
   userId: string;
-  pagination: PaginatedRequest | undefined;
+  pagination?: PaginatedRequest | undefined;
 }
 
 export interface UserTxsResponse {
@@ -77,6 +79,7 @@ export interface WalletMeta {
 export interface UpdateTxRequest {
   txId: string;
   updates: SolowalletTxUpdates | undefined;
+  pagination?: PaginatedRequest | undefined;
 }
 
 export interface SolowalletTxUpdates {
@@ -90,6 +93,7 @@ export interface ContinueTxRequest {
   txId: string;
   amountFiat: number;
   onramp?: OnrampSwapSource | undefined;
+  pagination?: PaginatedRequest | undefined;
 }
 
 export interface FindTxRequest {
