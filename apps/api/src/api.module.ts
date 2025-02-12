@@ -27,7 +27,6 @@ import { SwapController, SwapService } from './swap';
 import { NostrController, NostrService } from './nostr';
 import { SmsService } from './sms/sms.service';
 import { SmsController } from './sms/sms.controller';
-import { SharesService } from './shares/shares.service';
 import { SharesController } from './shares/shares.controller';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
@@ -184,7 +183,6 @@ import { ChamasController } from './chamas/chamas.controller';
     SwapService,
     NostrService,
     SmsService,
-    SharesService,
     SolowalletService,
     AdminService,
     PhoneAuthStategy,

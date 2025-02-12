@@ -1,8 +1,8 @@
 import { TestingModule } from '@nestjs/testing';
 import { CHAMAS_SERVICE_NAME, ChamasServiceClient } from '@bitsacco/common';
 import { createTestingModuleWithValidation } from '@bitsacco/testing';
-import { ChamasController } from './chamas.controller';
 import { type ClientGrpc } from '@nestjs/microservices';
+import { ChamasController } from './chamas.controller';
 
 describe('ChamasController', () => {
   let serviceGenerator: ClientGrpc;
