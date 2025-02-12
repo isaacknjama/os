@@ -1,9 +1,10 @@
 import {
   default_page,
   default_page_size,
-  ListSwapsDto,
   OfferSharesDto,
   PaginatedRequestDto,
+  SHARES_SERVICE_NAME,
+  SharesServiceClient,
   SubscribeSharesDto,
   TransferSharesDto,
   UpdateSharesDto,
@@ -12,19 +13,23 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Logger,
   Param,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { SharesService } from './shares.service';
+import { type ClientGrpc } from '@nestjs/microservices';
 
 @Controller('shares')
 export class SharesController {
+  private sharesService: SharesServiceClient;
   private readonly logger = new Logger(SharesController.name);
 
-  constructor(private readonly sharesService: SharesService) {
+  constructor(@Inject(SHARES_SERVICE_NAME) private readonly grpc: ClientGrpc) {
+    this.sharesService =
+      this.grpc.getService<SharesServiceClient>(SHARES_SERVICE_NAME);
     this.logger.log('SharesController initialized');
   }
 

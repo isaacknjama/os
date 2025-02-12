@@ -1,32 +1,34 @@
 import { TestingModule } from '@nestjs/testing';
+import { SHARES_SERVICE_NAME, SharesServiceClient } from '@bitsacco/common';
 import { createTestingModuleWithValidation } from '@bitsacco/testing';
-
+import { type ClientGrpc } from '@nestjs/microservices';
 import { SharesController } from './shares.controller';
-import { SharesService } from './shares.service';
 
 describe.skip('SharesController', () => {
-  let controller: SharesController;
-  let sharesService: SharesService;
+  let serviceGenerator: ClientGrpc;
+  let sharesController: SharesController;
+  let sharesServiceClient: Partial<SharesServiceClient>;
 
   beforeEach(async () => {
+    serviceGenerator = {
+      getService: jest.fn().mockReturnValue(sharesServiceClient),
+      getClientByServiceName: jest.fn().mockReturnValue(sharesServiceClient),
+    };
+
     const module: TestingModule = await createTestingModuleWithValidation({
       controllers: [SharesController],
       providers: [
         {
-          provide: SharesService,
-          useValue: {
-            buyShares: jest.fn(),
-          },
+          provide: SHARES_SERVICE_NAME,
+          useValue: serviceGenerator,
         },
       ],
     });
 
-    controller = module.get<SharesController>(SharesController);
-    sharesService = module.get<SharesService>(SharesService);
+    sharesController = module.get<SharesController>(SharesController);
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
-    expect(sharesService).toBeDefined();
+    expect(sharesController).toBeDefined();
   });
 });
