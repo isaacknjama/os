@@ -27,7 +27,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "bun test apps/api/test/ --config ./apps/api/test/jest-e2e.json",
     "proto:gen": "bunx protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./libs/common/src/types/proto --ts_proto_opt=nestJs=true --ts_proto_opt=exportCommonSymbols=false --ts_proto_opt=eslint_disable -I ./proto ./proto/*.proto",
-    "proto:clean": "rm ./libs/common/src/types/proto/*.ts"
+    "proto:clean": "rm ./libs/common/src/types/proto/*.ts",
+    "seed": "bun run seeders/cli.ts seed",
+    "seed:clean": "bun run seeders/cli.ts clean"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.2",
@@ -55,6 +57,8 @@
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "commander": "^11.1.0",
+    "dotenv": "^16.4.5",
     "install": "^0.13.0",
     "intasend-node": "^1.1.2",
     "ioredis": "^5.4.1",
