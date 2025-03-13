@@ -7,13 +7,15 @@ package solowallet;
 service SolowalletService {
   rpc DepositFunds(DepositFundsRequest) returns (UserTxsResponse){}
 
+  rpc ContinueDepositFunds(ContinueDepositFundsRequest) returns (UserTxsResponse){}
+
   rpc WithdrawFunds(WithdrawFundsRequest) returns (UserTxsResponse){}
+
+  rpc ContinueWithdrawFunds(WithdrawFundsRequest) returns (UserTxsResponse){}
 
   rpc UserTransactions(UserTxsRequest) returns (UserTxsResponse){}
 
   rpc UpdateTransaction(UpdateTxRequest) returns (UserTxsResponse) {}
-
-  rpc ContinueTransaction(ContinueTxRequest) returns (UserTxsResponse) {}
 
   rpc FindTransaction(lib.FindTxRequest) returns (SolowalletTx) {}
   
@@ -36,6 +38,20 @@ message DepositFundsRequest {
   optional lib.PaginatedRequest pagination = 11;
 }
 
+message ContinueDepositFundsRequest {
+  string user_id = 1;
+
+  int32 amount_fiat = 2;
+
+  string reference = 3;
+
+  optional lib.OnrampSwapSource onramp = 4;
+
+  reserved 5,6,7,8,9,10;
+
+  optional lib.PaginatedRequest pagination = 11;
+}
+
 message WithdrawFundsRequest {
   string user_id = 1;
 
@@ -50,6 +66,24 @@ message WithdrawFundsRequest {
   optional bool lnurl_request = 6;
 
   // Add more optional withdrawal targets, like bolt12 address
+
+  reserved 7,8,9,10;
+
+  optional lib.PaginatedRequest pagination = 11;
+}
+
+message ContinueWithdrawFundsRequest {
+  string user_id = 1;
+
+  int32 amountFiat = 2;
+
+  string reference = 3;
+
+  optional lib.OfframpSwapTarget offramp = 4;
+
+  optional lib.Bolt11 lightning = 5;
+
+  optional bool lnurl_request = 6;
 
   reserved 7,8,9,10;
 

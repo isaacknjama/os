@@ -28,6 +28,15 @@ export interface DepositFundsRequest {
   pagination?: PaginatedRequest | undefined;
 }
 
+export interface ContinueDepositFundsRequest {
+  userId: string;
+  txId: string;
+  amountFiat: number;
+  onramp?: OnrampSwapSource | undefined;
+  reference?: string | undefined;
+  pagination?: PaginatedRequest | undefined;
+}
+
 export interface WithdrawFundsRequest {
   userId: string;
   amountFiat: number;
