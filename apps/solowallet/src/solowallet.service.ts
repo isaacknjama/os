@@ -29,6 +29,7 @@ import {
   FmLightning,
   parseTransactionStatus,
   ContinueDepositFundsRequestDto,
+  ContinueWithdrawFundsRequestDto,
 } from '@bitsacco/common';
 import { type ClientGrpc } from '@nestjs/microservices';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -563,13 +564,27 @@ export class SolowalletService {
 
   async continueWithdrawFunds({
     userId,
+    txId,
     amountFiat,
     reference,
     offramp,
     lightning,
     lnurlRequest,
     pagination,
-  }: WithdrawFundsRequestDto): Promise<UserTxsResponse> {
+  }: ContinueWithdrawFundsRequestDto): Promise<UserTxsResponse> {
+    const tx = await this.wallet.findOne({ _id: txId });
+
+    if (tx.userId !== userId) {
+      throw new Error('Invalid request to continue transaction');
+    }
+
+    if (
+      tx.status === TransactionStatus.COMPLETE ||
+      tx.status === TransactionStatus.PROCESSING
+    ) {
+      throw new Error('Transaction is processing or complete');
+    }
+
     const { currentBalance } = await this.getWalletMeta(userId);
     let withdrawal: SolowalletDocument;
 
@@ -604,16 +619,21 @@ export class SolowalletService {
         const totalWithdrawnMsats = invoiceMsats + fee;
 
         // Create withdrawal record
-        withdrawal = await this.wallet.create({
-          userId,
-          amountMsats: totalWithdrawnMsats,
-          amountFiat,
-          lightning: JSON.stringify(lightning),
-          paymentTracker: operationId,
-          type: TransactionType.WITHDRAW,
-          status: TransactionStatus.COMPLETE,
-          reference: reference || inv.description || 'Lightning withdrawal',
-        });
+        withdrawal = await this.wallet.findOneAndUpdate(
+          {
+            _id: txId,
+            userId,
+          },
+          {
+            amountMsats: totalWithdrawnMsats,
+            amountFiat,
+            lightning: JSON.stringify({ ...lightning, operationId }),
+            paymentTracker: operationId,
+            type: TransactionType.WITHDRAW,
+            status: TransactionStatus.COMPLETE,
+            reference: reference || inv.description || 'Lightning withdrawal',
+          },
+        );
 
         this.logger.log(`Withdrawal record created with ID: ${withdrawal._id}`);
       } catch (error) {
@@ -676,16 +696,21 @@ export class SolowalletService {
         };
 
         // Create a pending withdrawal record
-        withdrawal = await this.wallet.create({
-          userId,
-          amountMsats: maxWithdrawableMsats, // This will be updated when actually claimed
-          amountFiat,
-          lightning: JSON.stringify(fmLightning),
-          paymentTracker: lnurlWithdrawPoint.k1, // We'll use k1 to track this withdrawal
-          type: TransactionType.WITHDRAW,
-          status: TransactionStatus.PENDING, // Pending until someone scans and claims
-          reference: reference || 'LNURL Withdrawal',
-        });
+        withdrawal = await this.wallet.findOneAndUpdate(
+          {
+            _id: txId,
+            userId,
+          },
+          {
+            amountMsats: maxWithdrawableMsats, // This will be updated when actually claimed
+            amountFiat,
+            lightning: JSON.stringify(fmLightning),
+            paymentTracker: lnurlWithdrawPoint.k1, // We'll use k1 to track this withdrawal
+            type: TransactionType.WITHDRAW,
+            status: TransactionStatus.PENDING, // Pending until someone scans and claims
+            reference: reference || 'LNURL Withdrawal',
+          },
+        );
 
         this.logger.log(
           `LNURL withdrawal request recorded with ID: ${withdrawal._id}`,
@@ -740,16 +765,21 @@ export class SolowalletService {
         const totalOfframpMsats = offrampMsats + fee;
 
         // Create withdrawal record
-        withdrawal = await this.wallet.create({
-          userId,
-          amountMsats: totalOfframpMsats,
-          amountFiat,
-          lightning: JSON.stringify({ invoice }),
-          paymentTracker: operationId,
-          type: TransactionType.WITHDRAW,
-          status,
-          reference: reference || 'Offramp withdrawal',
-        });
+        withdrawal = await this.wallet.findOneAndUpdate(
+          {
+            _id: txId,
+            userId,
+          },
+          {
+            amountMsats: totalOfframpMsats,
+            amountFiat,
+            lightning: JSON.stringify({ invoice }),
+            paymentTracker: operationId,
+            type: TransactionType.WITHDRAW,
+            status,
+            reference: reference || 'Offramp withdrawal',
+          },
+        );
 
         this.logger.log(
           `Offramp withdrawal record created with ID: ${withdrawal._id}`,
