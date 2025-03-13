@@ -11,7 +11,7 @@ service SolowalletService {
 
   rpc WithdrawFunds(WithdrawFundsRequest) returns (UserTxsResponse){}
 
-  rpc ContinueWithdrawFunds(WithdrawFundsRequest) returns (UserTxsResponse){}
+  rpc ContinueWithdrawFunds(ContinueWithdrawFundsRequest) returns (UserTxsResponse){}
 
   rpc UserTransactions(UserTxsRequest) returns (UserTxsResponse){}
 
@@ -41,13 +41,15 @@ message DepositFundsRequest {
 message ContinueDepositFundsRequest {
   string user_id = 1;
 
-  int32 amount_fiat = 2;
+  string tx_id = 2;
 
-  string reference = 3;
+  int32 amount_fiat = 3;
 
   optional lib.OnrampSwapSource onramp = 4;
 
-  reserved 5,6,7,8,9,10;
+  reserved 6,7,8,9;
+
+  optional string reference = 10;
 
   optional lib.PaginatedRequest pagination = 11;
 }
@@ -75,17 +77,19 @@ message WithdrawFundsRequest {
 message ContinueWithdrawFundsRequest {
   string user_id = 1;
 
-  int32 amountFiat = 2;
+  string tx_id = 2;
 
-  string reference = 3;
-
+  int32 amount_fiat = 3;
+  
   optional lib.OfframpSwapTarget offramp = 4;
-
+  
   optional lib.Bolt11 lightning = 5;
-
+  
   optional bool lnurl_request = 6;
-
-  reserved 7,8,9,10;
+  
+  reserved 7,8,9;
+  
+  string reference = 10;
 
   optional lib.PaginatedRequest pagination = 11;
 }
@@ -157,20 +161,4 @@ message SolowalletTxUpdates {
   optional lib.TransactionStatus status = 1;
   optional lib.Bolt11 lightning = 2;
   optional string reference = 3;
-}
-
-message ContinueTxRequest {
-  string user_id = 1;
-
-  string tx_id = 2;
-
-  int32 amount_fiat = 3;
-
-  optional lib.OnrampSwapSource onramp = 4;
-
-  reserved 6,7,8,9;
-
-  optional string reference = 10;
-
-  optional lib.PaginatedRequest pagination = 11;
 }

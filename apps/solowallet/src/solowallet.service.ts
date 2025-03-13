@@ -545,6 +545,227 @@ export class SolowalletService {
     };
   }
 
+  async continueWithdrawFunds({
+    userId,
+    amountFiat,
+    reference,
+    offramp,
+    lightning,
+    lnurlRequest,
+    pagination,
+  }: WithdrawFundsRequestDto): Promise<UserTxsResponse> {
+    const { currentBalance } = await this.getWalletMeta(userId);
+    let withdrawal: SolowalletDocument;
+
+    if (lightning) {
+      // 1. Prefer lightning withdrawal where possible
+      this.logger.log('Processing lightning invoice withdrawal');
+      this.logger.log(lightning);
+
+      // Decode the invoice to get the amount and details
+      const inv = await this.fedimintService.decode(lightning.invoice);
+      const invoiceMsats = Number(inv.amountMsats);
+
+      this.logger.log(`Invoice amount: ${invoiceMsats} msats`);
+      this.logger.log(`Current balance: ${currentBalance} msats`);
+
+      // Check if user has enough balance to pay the invoice
+      if (invoiceMsats > currentBalance) {
+        throw new Error('Invoice amount exceeds available balance');
+      }
+
+      try {
+        // Pay the lightning invoice using fedimint
+        const { operationId, fee } = await this.fedimintService.pay(
+          lightning.invoice,
+        );
+
+        this.logger.log(
+          `Lightning invoice paid successfully. Operation ID: ${operationId}, Fee: ${fee} msats`,
+        );
+
+        // Calculate total amount withdrawn (invoice amount + fee)
+        const totalWithdrawnMsats = invoiceMsats + fee;
+
+        // Create withdrawal record
+        withdrawal = await this.wallet.create({
+          userId,
+          amountMsats: totalWithdrawnMsats,
+          amountFiat,
+          lightning: JSON.stringify(lightning),
+          paymentTracker: operationId,
+          type: TransactionType.WITHDRAW,
+          status: TransactionStatus.COMPLETE,
+          reference: reference || inv.description || 'Lightning withdrawal',
+        });
+
+        this.logger.log(`Withdrawal record created with ID: ${withdrawal._id}`);
+      } catch (error) {
+        this.logger.error('Failed to pay lightning invoice', error);
+        throw new Error(
+          `Failed to process lightning payment: ${error.message}`,
+        );
+      }
+    } else if (lnurlRequest) {
+      // 2. Execute LNURL withdrawal flow
+      this.logger.log('Creating LNURL withdrawal request');
+
+      // Convert fiat amount to BTC msats for the withdrawal
+      let maxWithdrawableMsats: number;
+
+      if (amountFiat) {
+        // Get the bitcoin amount from fiat if specified
+        const { amountMsats } = await getQuote(
+          {
+            from: Currency.KES,
+            to: Currency.BTC,
+            amount: amountFiat.toString(),
+          },
+          this.swapService,
+          this.logger,
+        );
+        maxWithdrawableMsats = amountMsats;
+      } else {
+        // Otherwise use the current balance
+        maxWithdrawableMsats = currentBalance;
+      }
+
+      this.logger.log(`Max withdrawable amount: ${maxWithdrawableMsats} msats`);
+      this.logger.log(`Current balance: ${currentBalance} msats`);
+
+      // Make sure we don't try to allow withdrawal more than the balance
+      if (maxWithdrawableMsats > currentBalance) {
+        maxWithdrawableMsats = currentBalance;
+      }
+
+      if (maxWithdrawableMsats <= 0) {
+        throw new Error('Insufficient balance for withdrawal');
+      }
+
+      try {
+        // Create the LNURL withdraw point code elements
+        const lnurlWithdrawPoint =
+          await this.fedimintService.createLnUrlWithdrawPoint(
+            maxWithdrawableMsats,
+            Math.min(1000, maxWithdrawableMsats), // Set reasonable minimum
+            reference || 'Bitsacco Withdrawal',
+          );
+
+        this.logger.log(
+          `LNURL withdrawal access point created. LNURL: ${lnurlWithdrawPoint.lnurl}`,
+        );
+
+        const fmLightning: FmLightning = {
+          lnurlWithdrawPoint,
+        };
+
+        // Create a pending withdrawal record
+        withdrawal = await this.wallet.create({
+          userId,
+          amountMsats: maxWithdrawableMsats, // This will be updated when actually claimed
+          amountFiat,
+          lightning: JSON.stringify(fmLightning),
+          paymentTracker: lnurlWithdrawPoint.k1, // We'll use k1 to track this withdrawal
+          type: TransactionType.WITHDRAW,
+          status: TransactionStatus.PENDING, // Pending until someone scans and claims
+          reference: reference || 'LNURL Withdrawal',
+        });
+
+        this.logger.log(
+          `LNURL withdrawal request recorded with ID: ${withdrawal._id}`,
+        );
+      } catch (error) {
+        this.logger.error('Failed to create LNURL withdrawal request', error);
+        throw new Error(
+          `Failed to create LNURL withdrawal request: ${error.message}`,
+        );
+      }
+    } else if (offramp) {
+      // 3. Execute offramp withdrawals
+      this.logger.log('Processing offramp withdrawal');
+
+      // Get quote for conversion
+      const { quote, amountMsats } = await getQuote(
+        {
+          from: Currency.BTC,
+          to: offramp.currency || Currency.KES,
+          amount: amountFiat.toString(),
+        },
+        this.swapService,
+        this.logger,
+      );
+
+      // Check if user has enough balance
+      if (amountMsats > currentBalance) {
+        throw new Error('Insufficient funds for offramp withdrawal');
+      }
+
+      // Initiate offramp swap
+      const {
+        status,
+        amountMsats: offrampMsats,
+        invoice,
+      } = await initiateOfframpSwap<TransactionStatus>(
+        {
+          quote,
+          amountFiat: amountFiat.toString(),
+          reference,
+          target: offramp,
+        },
+        this.swapService,
+        this.logger,
+      );
+
+      try {
+        // Pay the invoice for the swap
+        const { operationId, fee } = await this.fedimintService.pay(invoice);
+
+        // Calculate total withdrawal amount including fee
+        const totalOfframpMsats = offrampMsats + fee;
+
+        // Create withdrawal record
+        withdrawal = await this.wallet.create({
+          userId,
+          amountMsats: totalOfframpMsats,
+          amountFiat,
+          lightning: JSON.stringify({ invoice }),
+          paymentTracker: operationId,
+          type: TransactionType.WITHDRAW,
+          status,
+          reference: reference || 'Offramp withdrawal',
+        });
+
+        this.logger.log(
+          `Offramp withdrawal record created with ID: ${withdrawal._id}`,
+        );
+      } catch (error) {
+        this.logger.error('Failed to process offramp payment', error);
+        throw new Error(`Failed to process offramp payment: ${error.message}`);
+      }
+    } else {
+      throw new Error(
+        'No withdrawal method provided (lnurlRequest, lightning invoice, or offramp)',
+      );
+    }
+
+    // Get updated transaction ledger
+    const ledger = await this.getPaginatedUserTxLedger({
+      userId,
+      pagination,
+      priority: withdrawal._id,
+    });
+
+    // Get updated wallet balance
+    const meta = await this.getWalletMeta(userId);
+
+    return {
+      txId: withdrawal._id,
+      ledger,
+      meta,
+      userId,
+    };
+  }
+
   async updateTransaction({ txId, updates, pagination }: UpdateTxDto) {
     const originTx = await this.wallet.findOne({ _id: txId });
     const { status, lightning, reference } = updates;

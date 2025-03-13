@@ -47,6 +47,17 @@ export interface WithdrawFundsRequest {
   pagination?: PaginatedRequest | undefined;
 }
 
+export interface ContinueWithdrawFundsRequest {
+  userId: string;
+  txId: string;
+  amountFiat: number;
+  offramp?: OfframpSwapTarget | undefined;
+  lightning?: Bolt11 | undefined;
+  lnurlRequest?: boolean | undefined;
+  reference: string;
+  pagination?: PaginatedRequest | undefined;
+}
+
 export interface UserTxsRequest {
   userId: string;
   pagination?: PaginatedRequest | undefined;
@@ -101,25 +112,22 @@ export interface SolowalletTxUpdates {
   reference?: string | undefined;
 }
 
-export interface ContinueTxRequest {
-  userId: string;
-  txId: string;
-  amountFiat: number;
-  onramp?: OnrampSwapSource | undefined;
-  reference?: string | undefined;
-  pagination?: PaginatedRequest | undefined;
-}
-
 export interface SolowalletServiceClient {
   depositFunds(request: DepositFundsRequest): Observable<UserTxsResponse>;
 
+  continueDepositFunds(
+    request: ContinueDepositFundsRequest,
+  ): Observable<UserTxsResponse>;
+
   withdrawFunds(request: WithdrawFundsRequest): Observable<UserTxsResponse>;
+
+  continueWithdrawFunds(
+    request: ContinueWithdrawFundsRequest,
+  ): Observable<UserTxsResponse>;
 
   userTransactions(request: UserTxsRequest): Observable<UserTxsResponse>;
 
   updateTransaction(request: UpdateTxRequest): Observable<UserTxsResponse>;
-
-  continueTransaction(request: ContinueTxRequest): Observable<UserTxsResponse>;
 
   findTransaction(request: FindTxRequest): Observable<SolowalletTx>;
 
@@ -135,8 +143,16 @@ export interface SolowalletServiceController {
     request: DepositFundsRequest,
   ): Promise<UserTxsResponse> | Observable<UserTxsResponse> | UserTxsResponse;
 
+  continueDepositFunds(
+    request: ContinueDepositFundsRequest,
+  ): Promise<UserTxsResponse> | Observable<UserTxsResponse> | UserTxsResponse;
+
   withdrawFunds(
     request: WithdrawFundsRequest,
+  ): Promise<UserTxsResponse> | Observable<UserTxsResponse> | UserTxsResponse;
+
+  continueWithdrawFunds(
+    request: ContinueWithdrawFundsRequest,
   ): Promise<UserTxsResponse> | Observable<UserTxsResponse> | UserTxsResponse;
 
   userTransactions(
@@ -145,10 +161,6 @@ export interface SolowalletServiceController {
 
   updateTransaction(
     request: UpdateTxRequest,
-  ): Promise<UserTxsResponse> | Observable<UserTxsResponse> | UserTxsResponse;
-
-  continueTransaction(
-    request: ContinueTxRequest,
   ): Promise<UserTxsResponse> | Observable<UserTxsResponse> | UserTxsResponse;
 
   findTransaction(
@@ -169,10 +181,11 @@ export function SolowalletServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       'depositFunds',
+      'continueDepositFunds',
       'withdrawFunds',
+      'continueWithdrawFunds',
       'userTransactions',
       'updateTransaction',
-      'continueTransaction',
       'findTransaction',
       'processLnUrlWithdraw',
     ];
