@@ -17,6 +17,7 @@ import {
 } from './swap.dto';
 import {
   DepositFundsRequest,
+  ContinueDepositFundsRequest,
   WithdrawFundsRequest,
   UserTxsRequest,
   UpdateTxRequest,
@@ -41,6 +42,38 @@ export class DepositFundsRequestDto implements DepositFundsRequest {
   reference: string;
 
   @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  @ApiProperty({ example: 2 })
+  amountFiat: number;
+
+  @ValidateNested()
+  @Type(() => OnrampSwapSourceDto)
+  @ApiProperty({ type: OnrampSwapSourceDto })
+  onramp?: OnrampSwapSourceDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PaginatedRequestDto)
+  @ApiProperty({ type: PaginatedRequestDto })
+  pagination?: PaginatedRequestDto;
+}
+
+export class ContinueDepositFundsRequestDto
+  implements ContinueDepositFundsRequest
+{
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty({ example: '43040650-5090-4dd4-8e93-8fd342533e7c' })
+  userId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty({ example: '35f47ebd-599e-4334-a741-67f3495995e3' })
+  txId: string;
+
   @IsNumber()
   @Min(1)
   @ApiProperty({ example: 2 })

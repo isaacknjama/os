@@ -228,6 +228,80 @@ export class SolowalletService {
     };
   }
 
+  async continueDepositFunds({
+    userId,
+    amountFiat,
+    reference,
+    onramp,
+    pagination,
+  }: DepositFundsRequestDto): Promise<UserTxsResponse> {
+    const { quote, amountMsats } = await getQuote(
+      {
+        from: onramp?.currency || Currency.KES,
+        to: Currency.BTC,
+        amount: amountFiat.toString(),
+      },
+      this.swapService,
+      this.logger,
+    );
+
+    const lightning = await this.fedimintService.invoice(
+      amountMsats,
+      reference,
+    );
+
+    const { status } = onramp
+      ? await initiateOnrampSwap<TransactionStatus>(
+          {
+            quote,
+            amountFiat: amountFiat.toString(),
+            reference,
+            source: onramp,
+            target: {
+              payout: lightning,
+            },
+          },
+          this.swapService,
+          this.logger,
+        )
+      : {
+          status: TransactionStatus.PENDING,
+        };
+
+    this.logger.log(`Status: ${status}`);
+    const deposit = await this.wallet.create({
+      userId,
+      amountMsats,
+      amountFiat,
+      lightning: JSON.stringify(lightning),
+      paymentTracker: lightning.operationId,
+      type: TransactionType.DEPOSIT,
+      status,
+      reference,
+    });
+
+    // listen for payment
+    this.fedimintService.receive(
+      ReceiveContext.SOLOWALLET,
+      lightning.operationId,
+    );
+
+    const ledger = await this.getPaginatedUserTxLedger({
+      userId,
+      pagination,
+      priority: deposit._id,
+    });
+
+    const meta = await this.getWalletMeta(userId);
+
+    return {
+      txId: deposit._id,
+      ledger,
+      meta,
+      userId,
+    };
+  }
+
   async userTransactions({
     userId,
     pagination,
