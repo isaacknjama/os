@@ -1,5 +1,6 @@
 import {
-  ContinueTxRequestDto,
+  ContinueDepositFundsRequestDto,
+  ContinueWithdrawFundsRequestDto,
   DepositFundsRequestDto,
   JwtAuthGuard,
   SOLOWALLET_SERVICE_NAME,
@@ -57,6 +58,18 @@ export class SolowalletController {
     return this.walletService.depositFunds(req);
   }
 
+  @Post('deposit/continue')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Continue Solowallet deposit transaction' })
+  @ApiBody({
+    type: ContinueDepositFundsRequestDto,
+  })
+  continueDepositTransaction(@Body() req: ContinueDepositFundsRequestDto) {
+    return this.walletService.continueDepositFunds(req);
+  }
+
   @Post('withdraw')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -67,6 +80,18 @@ export class SolowalletController {
   })
   withdrawFunds(@Body() req: WithdrawFundsRequestDto) {
     return this.walletService.withdrawFunds(req);
+  }
+
+  @Post('withdraw/continue')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Continue Solowallet withdraw transaction' })
+  @ApiBody({
+    type: ContinueWithdrawFundsRequestDto,
+  })
+  continueWithdrawTransaction(@Body() req: ContinueWithdrawFundsRequestDto) {
+    return this.walletService.continueWithdrawFunds(req);
   }
 
   @Post('transactions')
@@ -91,18 +116,6 @@ export class SolowalletController {
   })
   updateShares(@Body() req: UpdateTxDto) {
     return this.walletService.updateTransaction(req);
-  }
-
-  @Post('continue')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiCookieAuth()
-  @ApiOperation({ summary: 'Continue Solowallet transaction' })
-  @ApiBody({
-    type: ContinueTxRequestDto,
-  })
-  continueTransaction(@Body() req: ContinueTxRequestDto) {
-    return this.walletService.continueTransaction(req);
   }
 
   @Get('/find/id/:id')

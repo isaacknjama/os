@@ -6,11 +6,12 @@ import {
   UserTxsRequestDto,
   WithdrawFundsRequestDto,
   UpdateTxDto,
-  ContinueTxRequestDto,
   FindTxRequestDto,
   type LnUrlWithdrawRequest,
   LnUrlWithdrawResponse,
   TransactionStatus,
+  ContinueDepositFundsRequestDto,
+  ContinueWithdrawFundsRequestDto,
 } from '@bitsacco/common';
 import { SolowalletService } from './solowallet.service';
 import { ConfigService } from '@nestjs/config';
@@ -31,6 +32,11 @@ export class SolowalletController {
   }
 
   @GrpcMethod()
+  continueDepositFunds(request: ContinueDepositFundsRequestDto) {
+    return this.solowalletService.continueDepositFunds(request);
+  }
+
+  @GrpcMethod()
   userTransactions(request: UserTxsRequestDto) {
     return this.solowalletService.userTransactions(request);
   }
@@ -41,13 +47,13 @@ export class SolowalletController {
   }
 
   @GrpcMethod()
-  updateTransaction(request: UpdateTxDto) {
-    return this.solowalletService.updateTransaction(request);
+  continueWithdrawFunds(request: ContinueWithdrawFundsRequestDto) {
+    return this.solowalletService.continueWithdrawFunds(request);
   }
 
   @GrpcMethod()
-  continueTransaction(request: ContinueTxRequestDto) {
-    return this.solowalletService.continueTransaction(request);
+  updateTransaction(request: UpdateTxDto) {
+    return this.solowalletService.updateTransaction(request);
   }
 
   @GrpcMethod()

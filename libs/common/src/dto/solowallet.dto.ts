@@ -18,14 +18,13 @@ import {
 import {
   DepositFundsRequest,
   ContinueDepositFundsRequest,
+  ContinueWithdrawFundsRequest,
   WithdrawFundsRequest,
   UserTxsRequest,
   UpdateTxRequest,
   SolowalletTxUpdates,
   TransactionStatus,
-  ContinueTxRequest,
   FindTxRequest,
-  ContinueWithdrawFundsRequest,
 } from '../types';
 import { PaginatedRequestDto } from './lib.dto';
 
@@ -84,6 +83,12 @@ export class ContinueDepositFundsRequestDto
   @Type(() => OnrampSwapSourceDto)
   @ApiProperty({ type: OnrampSwapSourceDto })
   onramp?: OnrampSwapSourceDto;
+
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty()
+  reference: string;
 
   @IsOptional()
   @ValidateNested()
@@ -148,17 +153,17 @@ export class ContinueWithdrawFundsRequestDto
   @ApiProperty({ example: '43040650-5090-4dd4-8e93-8fd342533e7c' })
   userId: string;
 
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty({ example: '4a4b4c4d-cb98-40b1-9ed2-a13006a9f670' })
+  txId: string;
+
   @ApiProperty()
   @IsNumber()
   @Min(1)
   @ApiProperty({ example: 2 })
   amountFiat: number;
-
-  @IsNotEmpty()
-  @IsString()
-  @Type(() => String)
-  @ApiProperty()
-  reference: string;
 
   @IsOptional()
   @ValidateNested()
@@ -180,6 +185,12 @@ export class ContinueWithdrawFundsRequestDto
     description: 'request LNURL withdrawal',
   })
   lnurlRequest?: boolean;
+
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty()
+  reference: string;
 
   @IsOptional()
   @ValidateNested()
@@ -233,36 +244,6 @@ export class UpdateTxDto implements UpdateTxRequest {
   @Type(() => SolowalletTxUpdatesDto)
   @ApiProperty({ type: SolowalletTxUpdatesDto })
   updates: SolowalletTxUpdatesDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => PaginatedRequestDto)
-  @ApiProperty({ type: PaginatedRequestDto })
-  pagination?: PaginatedRequestDto;
-}
-
-export class ContinueTxRequestDto implements ContinueTxRequest {
-  @IsNotEmpty()
-  @IsString()
-  @Type(() => String)
-  @ApiProperty({ example: '43040650-5090-4dd4-8e93-8fd342533e7c' })
-  userId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @Type(() => String)
-  @ApiProperty({ example: '35f47ebd-599e-4334-a741-67f3495995e3' })
-  txId: string;
-
-  @IsNumber()
-  @Min(1)
-  @ApiProperty({ example: 2 })
-  amountFiat: number;
-
-  @ValidateNested()
-  @Type(() => OnrampSwapSourceDto)
-  @ApiProperty({ type: OnrampSwapSourceDto })
-  onramp?: OnrampSwapSourceDto;
 
   @IsOptional()
   @ValidateNested()
