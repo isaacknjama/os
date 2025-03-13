@@ -19,7 +19,6 @@ import {
   TransactionType,
   WithdrawFundsRequestDto,
   UpdateTxDto,
-  ContinueTxRequestDto,
   default_page,
   default_page_size,
   SolowalletTx,
@@ -29,6 +28,7 @@ import {
   initiateOnrampSwap,
   FmLightning,
   parseTransactionStatus,
+  ContinueDepositFundsRequestDto,
 } from '@bitsacco/common';
 import { type ClientGrpc } from '@nestjs/microservices';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -230,11 +230,24 @@ export class SolowalletService {
 
   async continueDepositFunds({
     userId,
+    txId,
     amountFiat,
-    reference,
     onramp,
     pagination,
-  }: DepositFundsRequestDto): Promise<UserTxsResponse> {
+  }: ContinueDepositFundsRequestDto): Promise<UserTxsResponse> {
+    const tx = await this.wallet.findOne({ _id: txId });
+
+    if (tx.userId !== userId) {
+      throw new Error('Invalid request to continue transaction');
+    }
+
+    if (
+      tx.status === TransactionStatus.COMPLETE ||
+      tx.status === TransactionStatus.PROCESSING
+    ) {
+      throw new Error('Transaction is processing or complete');
+    }
+
     const { quote, amountMsats } = await getQuote(
       {
         from: onramp?.currency || Currency.KES,
@@ -247,15 +260,15 @@ export class SolowalletService {
 
     const lightning = await this.fedimintService.invoice(
       amountMsats,
-      reference,
+      tx.reference,
     );
 
     const { status } = onramp
-      ? await initiateOnrampSwap<TransactionStatus>(
+      ? await initiateOnrampSwap(
           {
             quote,
             amountFiat: amountFiat.toString(),
-            reference,
+            reference: tx.reference,
             source: onramp,
             target: {
               payout: lightning,
@@ -269,16 +282,19 @@ export class SolowalletService {
         };
 
     this.logger.log(`Status: ${status}`);
-    const deposit = await this.wallet.create({
-      userId,
-      amountMsats,
-      amountFiat,
-      lightning: JSON.stringify(lightning),
-      paymentTracker: lightning.operationId,
-      type: TransactionType.DEPOSIT,
-      status,
-      reference,
-    });
+    const deposit = await this.wallet.findOneAndUpdate(
+      {
+        _id: txId,
+        userId,
+      },
+      {
+        amountMsats,
+        amountFiat,
+        lightning: JSON.stringify(lightning),
+        paymentTracker: lightning.operationId,
+        status,
+      },
+    );
 
     // listen for payment
     this.fedimintService.receive(
@@ -788,96 +804,6 @@ export class SolowalletService {
 
     return {
       txId: originTx._id,
-      ledger,
-      meta,
-      userId,
-    };
-  }
-
-  async continueTransaction({
-    userId,
-    txId,
-    amountFiat,
-    onramp,
-    pagination,
-  }: ContinueTxRequestDto): Promise<UserTxsResponse> {
-    const tx = await this.wallet.findOne({ _id: txId });
-
-    if (tx.userId !== userId) {
-      throw new Error('Invalid request to continue transaction');
-    }
-
-    if (
-      tx.status === TransactionStatus.COMPLETE ||
-      tx.status === TransactionStatus.PROCESSING
-    ) {
-      throw new Error('Transaction is processing or complete');
-    }
-
-    const { quote, amountMsats } = await getQuote(
-      {
-        from: onramp?.currency || Currency.KES,
-        to: Currency.BTC,
-        amount: amountFiat.toString(),
-      },
-      this.swapService,
-      this.logger,
-    );
-
-    const lightning = await this.fedimintService.invoice(
-      amountMsats,
-      tx.reference,
-    );
-
-    const { status } = onramp
-      ? await initiateOnrampSwap(
-          {
-            quote,
-            amountFiat: amountFiat.toString(),
-            reference: tx.reference,
-            source: onramp,
-            target: {
-              payout: lightning,
-            },
-          },
-          this.swapService,
-          this.logger,
-        )
-      : {
-          status: TransactionStatus.PENDING,
-        };
-
-    this.logger.log(`Status: ${status}`);
-    const deposit = await this.wallet.findOneAndUpdate(
-      {
-        _id: txId,
-        userId,
-      },
-      {
-        amountMsats,
-        amountFiat,
-        lightning: JSON.stringify(lightning),
-        paymentTracker: lightning.operationId,
-        status,
-      },
-    );
-
-    // listen for payment
-    this.fedimintService.receive(
-      ReceiveContext.SOLOWALLET,
-      lightning.operationId,
-    );
-
-    const ledger = await this.getPaginatedUserTxLedger({
-      userId,
-      pagination,
-      priority: deposit._id,
-    });
-
-    const meta = await this.getWalletMeta(userId);
-
-    return {
-      txId: deposit._id,
       ledger,
       meta,
       userId,
