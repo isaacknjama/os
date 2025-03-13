@@ -25,6 +25,7 @@ import {
   TransactionStatus,
   ContinueTxRequest,
   FindTxRequest,
+  ContinueWithdrawFundsRequest,
 } from '../types';
 import { PaginatedRequestDto } from './lib.dto';
 
@@ -92,6 +93,55 @@ export class ContinueDepositFundsRequestDto
 }
 
 export class WithdrawFundsRequestDto implements WithdrawFundsRequest {
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty({ example: '43040650-5090-4dd4-8e93-8fd342533e7c' })
+  userId: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  @ApiProperty({ example: 2 })
+  amountFiat: number;
+
+  @IsNotEmpty()
+  @IsString()
+  @Type(() => String)
+  @ApiProperty()
+  reference: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => OfframpSwapTargetDto)
+  @ApiProperty({ type: OfframpSwapTargetDto, required: false })
+  offramp?: OfframpSwapTargetDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Bolt11InvoiceDto)
+  @ApiProperty({ type: Bolt11InvoiceDto, required: false })
+  lightning?: Bolt11InvoiceDto;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    description: 'request LNURL withdrawal',
+  })
+  lnurlRequest?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PaginatedRequestDto)
+  @ApiProperty({ type: PaginatedRequestDto })
+  pagination?: PaginatedRequestDto;
+}
+
+export class ContinueWithdrawFundsRequestDto
+  implements ContinueWithdrawFundsRequest
+{
   @IsNotEmpty()
   @IsString()
   @Type(() => String)
