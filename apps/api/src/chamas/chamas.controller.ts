@@ -143,7 +143,7 @@ export class ChamasController {
   })
   @ApiQuery({
     name: 'size',
-    example: '100',
+    example: '10',
     type: PaginatedRequestDto['size'],
     required: false,
   })
@@ -251,13 +251,31 @@ export class ChamasController {
     required: false,
     description: 'chama id',
   })
+  @ApiQuery({
+    name: 'page',
+    example: '0',
+    type: PaginatedRequestDto['page'],
+    required: false,
+  })
+  @ApiQuery({
+    name: 'size',
+    example: '10',
+    type: PaginatedRequestDto['size'],
+    required: false,
+  })
   async filterTransactions(
     @Query('memberId') memberId: string,
     @Query('chamaId') chamaId: string,
+    @Query('page') page: number = default_page,
+    @Query('size') size: number = default_page_size,
   ) {
     return this.wallet.filterTransactions({
       memberId,
       chamaId,
+      pagination: {
+        page,
+        size,
+      },
     });
   }
 
