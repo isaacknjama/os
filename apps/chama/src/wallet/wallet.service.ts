@@ -275,6 +275,11 @@ export class ChamaWalletService {
       memberId,
     );
 
+    // Import review utility functions
+    const { addOrUpdateReview, calculateTransactionStatus } = await import(
+      './review-utils'
+    );
+
     const chama = await this.chamas.findChama({ chamaId });
     const initiatorMember = chama.members.find(
       (member) => member.userId === memberId,
@@ -283,25 +288,28 @@ export class ChamaWalletService {
       initiatorMember?.roles.includes(ChamaMemberRole.Admin) ||
       initiatorMember?.roles.includes(ChamaMemberRole.ExternalAdmin);
 
-    const initialReviews = [];
+    let initialReviews = [];
 
-    // If member is an admin, add their pre-review
+    // If member is an admin, add their pre-review using the utility function
     if (isAdmin) {
       this.logger.log(
         `Member ${memberId} is a chama admin - adding pre-review to withdrawal`,
       );
-      initialReviews.push({
+      initialReviews = addOrUpdateReview(
+        { reviews: initialReviews },
         memberId,
-        review: Review.APPROVE,
-      });
+        Review.APPROVE,
+      );
     }
 
-    // Check if requestor is the ONLY admin in the chama
-    const isSoleAdmin =
-      isAdmin &&
-      chama.members.filter((member) =>
-        member.roles.includes(ChamaMemberRole.Admin),
-      ).length === 1;
+    // Determine initial status based on reviews
+    const initialStatus = isAdmin
+      ? calculateTransactionStatus(
+          { reviews: initialReviews },
+          chama,
+          this.logger,
+        )
+      : ChamaTxStatus.PENDING;
 
     const { amountMsats } = await getQuote(
       {
@@ -313,7 +321,7 @@ export class ChamaWalletService {
       this.logger,
     );
 
-    // Create a pending withdrawal record that requires approval
+    // Create a withdrawal record with calculated status
     const withdrawal = toChamaWalletTx(
       await this.wallet.create({
         memberId,
@@ -323,10 +331,7 @@ export class ChamaWalletService {
         lightning: JSON.stringify({}),
         paymentTracker: `${Date.now()}`,
         type: TransactionType.WITHDRAW,
-        status:
-          isSoleAdmin && initialReviews.length > 0
-            ? ChamaTxStatus.APPROVED // Auto-approve only if the sole admin
-            : ChamaTxStatus.PENDING,
+        status: initialStatus, // Status calculated from the review utility
         reviews: initialReviews, // Include self-approval if admin
         reference: reference || 'Offramp withdrawal (pending approval)',
       }),
@@ -637,10 +642,36 @@ export class ChamaWalletService {
     const txd = await this.wallet.findOne({ _id: txId });
     const { status, amountMsats, reviews, reference } = updates;
 
+    // Use the explicitly provided status if present, otherwise calculate from reviews
+    let calculatedStatus = status !== undefined ? status : txd.status;
+
+    // If reviews are updated, analyze them to determine if status should change
+    if (reviews !== undefined) {
+      try {
+        // Import review utility functions
+        const { calculateTransactionStatus } = await import('./review-utils');
+
+        // Find the chama to determine how many admins are required for approval
+        const chama = await this.chamas.findChama({ chamaId: txd.chamaId });
+
+        // Calculate the transaction status based on reviews
+        calculatedStatus = calculateTransactionStatus(
+          { _id: txId, reviews },
+          chama,
+          this.logger,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to calculate review status for transaction ${txId}`,
+          error,
+        );
+      }
+    }
+
     await this.wallet.findOneAndUpdate(
       { _id: txId },
       {
-        status: status !== undefined ? status : txd.status,
+        status: calculatedStatus,
         amountMsats: amountMsats !== undefined ? amountMsats : txd.amountMsats,
         reviews: reviews !== undefined ? reviews : txd.reviews,
         reference: reference ?? txd.reference,
