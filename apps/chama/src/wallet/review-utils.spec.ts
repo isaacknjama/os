@@ -51,6 +51,7 @@ describe('Review Utilities', () => {
       const status = calculateTransactionStatus(
         mockTransaction,
         mockChama,
+        ChamaTxStatus.PENDING,
         mockLogger,
       );
       expect(status).toBe(ChamaTxStatus.REJECTED);
@@ -70,6 +71,7 @@ describe('Review Utilities', () => {
       const status = calculateTransactionStatus(
         mockTransaction,
         mockChama,
+        ChamaTxStatus.PENDING,
         mockLogger,
       );
       expect(status).toBe(ChamaTxStatus.APPROVED);
@@ -88,6 +90,7 @@ describe('Review Utilities', () => {
       const status = calculateTransactionStatus(
         mockTransaction,
         mockChama,
+        ChamaTxStatus.PENDING,
         mockLogger,
       );
       expect(status).toBe(ChamaTxStatus.PENDING);
@@ -100,6 +103,7 @@ describe('Review Utilities', () => {
       const status = calculateTransactionStatus(
         mockTransaction,
         mockChama,
+        ChamaTxStatus.PENDING,
         mockLogger,
       );
       expect(status).toBe(ChamaTxStatus.PENDING);
