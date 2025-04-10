@@ -28,6 +28,7 @@ export interface ChamaWithMembers {
 export function calculateTransactionStatus(
   transaction: ReviewableTransaction,
   chama: ChamaWithMembers,
+  defaultStatus: ChamaTxStatus,
   logger?: Logger,
 ): ChamaTxStatus {
   const reviews = transaction.reviews || [];
@@ -70,7 +71,7 @@ export function calculateTransactionStatus(
   }
 
   // If no decision can be made yet, maintain PENDING status
-  return ChamaTxStatus.PENDING;
+  return defaultStatus;
 }
 
 /**

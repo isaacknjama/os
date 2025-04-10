@@ -307,6 +307,7 @@ export class ChamaWalletService {
       ? calculateTransactionStatus(
           { reviews: initialReviews },
           chama,
+          ChamaTxStatus.PENDING,
           this.logger,
         )
       : ChamaTxStatus.PENDING;
@@ -658,6 +659,7 @@ export class ChamaWalletService {
         calculatedStatus = calculateTransactionStatus(
           { _id: txId, reviews },
           chama,
+          status,
           this.logger,
         );
       } catch (error) {
